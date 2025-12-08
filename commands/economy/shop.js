@@ -126,14 +126,14 @@ export default {
         .setName('shop')
         .setDescription('Shop Items'),
     aliases: ['!9k Buy', '!9k Purchase', '!9k Shop', '!9k List Shop', '!9k items'],
-    execute(msgOrInteraction, User, Bot) {
+    execute(interaction, User, Bot) {
         // Check if it's a slash command interaction
-        if (msgOrInteraction.commandName) {
+        if (interaction.commandName) {
             // Slash command - show the shop
-            ListShopItems(msgOrInteraction, Bot);
+            ListShopItems(interaction, Bot);
         } else {
             // Text command
-            const msg = msgOrInteraction;
+            const msg = interaction;
             if (SearchString(msg.content, ['!9k Buy', '!9k Purchase'])) {
                 BuyShopItem(msg, User, Bot);
             } else if (SearchString(msg.content, ['!9k Shop', '!9k List Shop', '!9k items'])) {
