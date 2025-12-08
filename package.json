@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "@discordjs/voice": "^0.19.0",
+    "canvas": "^3.2.0",
+    "chartjs-node-canvas": "^5.0.0",
+    "date-diff": "^1.0.2",
+    "date-fns": "^4.1.0",
+    "discord-ytdl-core": "^5.0.4",
+    "discord.js": "^14.25.1",
+    "mysql2": "^3.15.3",
+    "yt-search": "^2.13.1",
+    "ytdl-core": "^4.11.5"
+  },
+  "name": "9k",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "deploy-commands": "node deploy-commands.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
