@@ -1,0 +1,140 @@
+
+##  Características
+
+- **Sistema de Economía**: Moneda virtual, tienda, transferencias y comercio de Robux
+- **Juegos Divertidos**: Blackjack, tragamonedas, lanzamiento de moneda, adivinanza de números, sistema de trabajo
+- **Herramientas de Moderación**: Seguimiento de mensajes, gestión de roles, guardado forzado
+- **Comandos de Utilidad**: Información del servidor, perfiles de usuario, roles de color, emotes
+- **Sistema de Música**: Integración con YouTube (servidores limitados)
+
+##  Requisitos Previos
+
+- Node.js v16 o superior
+- Base de datos MySQL
+- Token de Bot de Discord ([Portal de Desarrolladores de Discord](https://discord.com/developers/applications))
+
+## 🔧 Instalación
+
+1. **Clonar el repositorio**
+   ```bash
+   git clone <url-de-tu-repo>
+   cd 9k
+   ```
+
+2. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
+
+3. **Configurar el bot**
+   ```bash
+   cp config.example.js config.js
+   ```
+   
+   Edita `config.js` y agrega tu:
+   - Token del bot de Discord
+   - ID del cliente
+   - Credenciales de la base de datos
+   - Tokens de webhook
+   - Invitaciones del servidor
+
+4. **Configurar la base de datos**
+   
+   Crea una base de datos MySQL y tablas para:
+   - `BotUsers` - Datos de usuario (userid, messages, exp, cash, websiteuser)
+   - `Messages` - Seguimiento de mensajes (serverid, userid, messageid, channelid, senton)
+
+5. **Desplegar comandos slash**
+   ```bash
+   npm run deploy-commands
+   ```
+
+6. **Iniciar el bot**
+   ```bash
+   npm start
+   ```
+   
+   Para desarrollo con reinicio automático:
+   ```bash
+   npm run dev
+   ```
+
+##  Estructura del Proyecto
+
+```
+9k/
+├── commands/          # Módulos de comandos
+│   ├── economy/      # Comandos de economía (tienda, transferir, robux)
+│   ├── fun/          # Comandos de juegos (blackjack, slots, trabajo, etc.)
+│   ├── moderation/   # Herramientas de moderación
+│   ├── music/        # Reproducción de música
+│   └── utility/      # Comandos de utilidad
+├── utils/            # Funciones auxiliares
+├── config.js         # Configuración del bot (en gitignore)
+├── index.js          # Archivo principal del bot
+└── deploy-commands.js # Despliegue de comandos slash
+```
+
+##  Comandos
+
+### Economía
+- `/shop` - Ver artículos de la tienda
+- `/transfer` - Enviar dinero a otros usuarios
+- `/robux` - Intercambiar efectivo del bot por Robux
+
+### Diversión
+- `!9k work` - Eventos de trabajo aleatorios por efectivo
+- `!9k bj` - Jugar blackjack
+- `!9k slots` - Juego de tragamonedas
+- `!9k coin flip` - Lanzar una moneda
+- `!9k guess` - Juego de adivinanza de números
+
+### Utilidad
+- `!9k help` - Lista de comandos
+- `!9k user` - Estadísticas de usuario
+- `!9k invite` - Enlace de invitación del bot
+- `!9k color @role` - Obtener rol de color
+- `!9k role @role` - Obtener rol de canal
+
+### Moderación
+- `!9k messages` - Estadísticas de mensajes del servidor
+- `!9k forcesave` - Guardar datos de usuario forzadamente (solo admin)
+
+##  Configuración
+
+Opciones clave de configuración en `config.js`:
+
+```javascript
+export default {
+    token: 'TU_TOKEN_DEL_BOT',
+    clientId: 'TU_CLIENT_ID',
+    database: {
+        host: '127.0.0.1',
+        user: 'usuario',
+        password: 'contraseña',
+        database: 'nombre_base_datos'
+    },
+    shop: {
+        bank: {
+            botCash: 0,
+            robux: 300,
+            robuxTradeRate: 0.02
+        },
+        items: [/* artículos de la tienda */]
+    }
+}
+```
+
+##  Migración a ES6 (Última Actualización)
+
+El proyecto ha sido completamente migrado a módulos ES6:
+
+-  Usa `import`/`export` en lugar de `require`/`module.exports`
+-  Usa `const`/`let` en lugar de `var`
+-  Configurado con `"type": "module"` en package.json
+-  Los 25 archivos convertidos a JavaScript moderno
+
+### Notas Importantes para ES6:
+- Todas las importaciones deben incluir extensiones de archivo `.js`
+- `config.js` debe usar `export default {}`
+- Algunos paquetes requieren importaciones de espacio de nombres: `import * as package from 'package'`
