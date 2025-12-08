@@ -1,7 +1,7 @@
 import { CreateEmbed, SearchString } from "../../utils/functions.js";
 import { SlashCommandBuilder } from "discord.js";
 
-function RobuxTradeRate(msg, Bot) {
+function RobuxTradeRate(interaction, Bot) {
   const Embed = structuredClone(Bot.Embed);
   Embed.Title = "Bot Points To Robux Conversion";
   Embed.Description = `Current conversion rate. ${
@@ -11,11 +11,11 @@ The bank currently has ${Bot.Shop.Bank.Robux} Robux available for trade.
 `;
   Embed.Thumbnail = false;
   Embed.Image = false;
-  msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+  interaction.reply({ embeds: [CreateEmbed(Embed)] });
 }
 
-function RobuxTrade(msg, user, Bot) {
-  const author = msg.author || msg.user;
+function RobuxTrade(interaction, user, Bot) {
+  const author = interaction.author || interaction.user;
   const Embed = structuredClone(Bot.Embed);
   Embed.Title = "Trade Bot Cash For Robux?";
   Embed.Description = `Enter a amount of cash to trade! Conversion Rate: ${
@@ -25,7 +25,7 @@ The bank has ${Bot.Shop.Bank.Robux} Robux to trade (you can trade ${
     Bot.Shop.Bank.Robux / Bot.Shop.Bank.RobuxTradeRate
   } bot point's and must trade at least ${10 / Bot.Shop.Bank.RobuxTradeRate})
 if you dont want to trade right now just enter 0 to cancel.`;
-  msg.channel.send({ embeds: [CreateEmbed(Embed)] }).then((Sent) => {
+  interaction.reply({ embeds: [CreateEmbed(Embed)] }).then((Sent) => {
     const msg_filter = (response) => {
       return response.author.id === author.id;
     };
@@ -59,12 +59,12 @@ Bank Robux After Trade: ${
               user.cash += -Trade;
               Bot.Shop.Bank.Robux += -(Trade * Bot.Shop.Bank.RobuxTradeRate);
               Bot.Shop.Bank.BotCash += Trade;
-              msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+              interaction.reply({ embeds: [CreateEmbed(Embed)] });
             })
             .catch(function (e) {
               Embed.Title = "Trade Failed D:";
               Embed.Description = `Error: *${e}*`;
-              msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+              interaction.reply({ embeds: [CreateEmbed(Embed)] });
             });
         } else {
           const Embed = structuredClone(Bot.Embed);
@@ -73,7 +73,7 @@ Bank Robux After Trade: ${
 `;
           Embed.Thumbnail = false;
           Embed.Image = false;
-          msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+          interaction.reply({ embeds: [CreateEmbed(Embed)] });
         }
       });
   });
@@ -101,36 +101,36 @@ export default {
     "!9k Robux Trade",
     "!9k Buy Robux",
   ],
-  execute(msg, User, Bot) {
+  execute(interaction, User, Bot) {
     // Handle slash commands
-    if (msg.isChatInputCommand && msg.isChatInputCommand()) {
-      const subcommand = msg.options.getSubcommand();
+    if (interaction.isChatInputCommand && interaction.isChatInputCommand()) {
+      const subcommand = interaction.options.getSubcommand();
       if (subcommand === "rate") {
-        RobuxTradeRate(msg, Bot);
+        RobuxTradeRate(interaction, Bot);
       } else if (subcommand === "trade") {
-        RobuxTrade(msg, User, Bot);
+        RobuxTrade(interaction, User, Bot);
       }
       return;
     }
 
     // Handle regular text commands
     if (
-      SearchString(msg.content, [
+      SearchString(interaction.content, [
         "!9k Robux Rate",
         "!9k Robux Trade Rate",
         "!9k Conversion",
         "!9k Trade",
       ])
     ) {
-      RobuxTradeRate(msg, Bot);
+      RobuxTradeRate(interaction, Bot);
     } else if (
-      SearchString(msg.content, [
+      SearchString(interaction.content, [
         "!9k Trade Robux",
         "!9k Robux Trade",
         "!9k Buy Robux",
       ])
     ) {
-      RobuxTrade(msg, User, Bot);
+      RobuxTrade(interaction, User, Bot);
     }
   },
 };
