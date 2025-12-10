@@ -1,7 +1,11 @@
 import { CreateEmbed } from '../../utils/functions.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'emote',
+    data: new SlashCommandBuilder()
+        .setName('emote')
+        .setDescription('Get information about an emoji by reacting to the message'),
     aliases: ['!9k Emote'],
     execute(msg, User, Bot) {
         const Embed = structuredClone(Bot.Embed);

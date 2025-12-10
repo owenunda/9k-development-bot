@@ -1,7 +1,11 @@
 import { CreateEmbed, CheckAdmin, delay } from '../../utils/functions.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'updateRoles',
+    data: new SlashCommandBuilder()
+        .setName('updateroles')
+        .setDescription('Update member roles for all server members (Admin only)'),
     aliases: ['!9k Update Member Roles'],
     execute(msg, User, Bot) {
         CheckAdmin(msg).then(IsAdmin => {

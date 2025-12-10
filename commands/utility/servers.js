@@ -1,7 +1,11 @@
 import { CreateEmbed, SearchString } from '../../utils/functions.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'servers',
+    data: new SlashCommandBuilder()
+        .setName('servers')
+        .setDescription('List all servers the 9k bot is in'),
     aliases: ['!9k Servers Im In', '!9k Server List', '!9k List Servers', '!9k Servers List', '!9k All Server', '!9k Get Server', '!9k what servers are you in'],
     execute(msg, User, Bot) {
         const Guilds = Bot.Client.guilds.cache;

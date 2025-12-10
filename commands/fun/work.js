@@ -1,4 +1,5 @@
 import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown } from '../../utils/functions.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 const BasicWork = [
     { Desc: 'Walking the street you find a signed 9000inc poster, might be worth something at a pawn shop.', Tone: 1 },//1 good 2 bad 3 none 4 rng
@@ -51,6 +52,9 @@ const BasicWork = [
 
 export default {
     name: 'work',
+    data: new SlashCommandBuilder()
+        .setName('work')
+        .setDescription('Work a random job to earn cash'),
     aliases: ['!9k Work'],
     execute(msg, User, Bot) {
         const cooldownkey = `Work-${msg.author.id}`;

@@ -1,7 +1,11 @@
 import { CreateEmbed, SearchString } from '../../utils/functions.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'guess',
+    data: new SlashCommandBuilder()
+        .setName('guess')
+        .setDescription('Guess the number game - win cash if you guess correctly'),
     aliases: ['!9k guess', '!9k random number', '!9k number guess', '!9k number game'],
     execute(msg, User, Bot) {
         const Embed = structuredClone(Bot.Embed);

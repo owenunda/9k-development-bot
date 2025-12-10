@@ -1,9 +1,17 @@
 import { CreateEmbed } from '../../utils/functions.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 const usedcodes = [];
 
 export default {
     name: 'redeem',
+    data: new SlashCommandBuilder()
+        .setName('redeem')
+        .setDescription('Redeem a code for cash rewards')
+        .addStringOption(option =>
+            option.setName('code')
+                .setDescription('The code to redeem')
+                .setRequired(true)),
     aliases: [], // Aliases will be handled by checking against Bot.Codes in index.js or here?
     // The original code checks if msg.content is in Bot.Codes.
     // I should probably export the check logic or handle it in index.js to route here.

@@ -1,8 +1,11 @@
 import { CheckAdmin, SaveBotUsers } from '../../utils/functions.js';
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'save',
+    data: new SlashCommandBuilder()
+        .setName('save')
+        .setDescription('Force save bot data (Admin only)'),
     aliases: ['!9k ForceSave'],
     execute(msg, User, Bot) {
         CheckAdmin(msg).then(IsAdmin => {

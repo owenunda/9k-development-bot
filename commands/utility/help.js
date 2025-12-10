@@ -1,7 +1,11 @@
 import { CreateEmbed } from '../../utils/functions.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'help',
+    data: new SlashCommandBuilder()
+        .setName('help')
+        .setDescription('Display all available bot commands and information'),
     aliases: ['!9k Help', '!9k Info', '!9k Commands', '!9k Cmds', '!9k'],
     execute(msg, User, Bot) {
         const Embed = structuredClone(Bot.Embed);

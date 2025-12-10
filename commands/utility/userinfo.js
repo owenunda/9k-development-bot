@@ -1,7 +1,15 @@
 import { CreateEmbed, GetUser } from '../../utils/functions.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'userinfo',
+    data: new SlashCommandBuilder()
+        .setName('userinfo')
+        .setDescription('Display user information including balance and messages')
+        .addUserOption(option =>
+            option.setName('user')
+                .setDescription('The user to get info about (optional)')
+                .setRequired(false)),
     aliases: ['!9k User', '!9k bal', '!9k balance', '!9k wallet'],
     execute(msg, User, Bot) {
         const Mention = msg.mentions.members.first();

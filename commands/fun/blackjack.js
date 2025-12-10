@@ -1,4 +1,5 @@
 import { CreateEmbed, SearchString, SetCoolDown, AlertCoolDown, CheckCoolDown } from '../../utils/functions.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 const Cards = [
     'Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'King', 'Queen', 'Jack'
@@ -157,6 +158,9 @@ Total: ${BlackJackHandTotal(Game.Cards.House)}
 
 export default {
     name: 'blackjack',
+    data: new SlashCommandBuilder()
+        .setName('blackjack')
+        .setDescription('Play blackjack and bet your cash'),
     aliases: ['!9k bj', '!9k black'],
     execute(msg, User, Bot) {
         const cooldownkey = `BlackJack-${msg.author.id}`;

@@ -2,9 +2,30 @@ import { CreateEmbed, CompareDates } from '../../utils/functions.js';
 import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
 import * as DateFNS from 'date-fns';
 import DateDiff from 'date-diff';
+import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'messages',
+    data: new SlashCommandBuilder()
+        .setName('messages')
+        .setDescription('Display server message statistics with charts')
+        .addStringOption(option =>
+            option.setName('timeframe')
+                .setDescription('Time period to analyze')
+                .setRequired(false)
+                .addChoices(
+                    { name: 'All Time', value: 'all' },
+                    { name: 'Minute', value: 'minutes' },
+                    { name: 'Hour', value: 'hours' },
+                    { name: 'Day', value: 'days' },
+                    { name: 'Week', value: 'weeks' },
+                    { name: 'Month', value: 'months' },
+                    { name: 'Year', value: 'years' }
+                ))
+        .addChannelOption(option =>
+            option.setName('channel')
+                .setDescription('Specific channel to analyze (optional)')
+                .setRequired(false)),
     aliases: ['!9k Messages All', '!9k Messages Max', '!9k Messages Minute', '!9k Messages Hour', '!9k Messages Daily', '!9k Messages Day', '!9k Messages Week', '!9k Messages Month', '!9k Messages Year',
         '!9k Server Messages All', '!9k Server Messages Max', '!9k Server Messages Hour', '!9k Server Messages Daily', '!9k Server Messages Day', '!9k Server Messages Minute', '!9k Server Messages Week', '!9k Server Messages Month', '!9k Server Messages Year'],
     execute(msg, User, Bot) {

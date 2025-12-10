@@ -1,4 +1,5 @@
 import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown } from '../../utils/functions.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 const Emojis = [
     '🍊', '🍊', '🍆', '🍆', '🍇', '🍇', '🍅', '🍓', '🍓', '💀', '🐰', '🐰', '🐰', '🐰',
@@ -9,6 +10,9 @@ const Emojis = [
 
 export default {
     name: 'slots',
+    data: new SlashCommandBuilder()
+        .setName('slots')
+        .setDescription('Play the slot machine and bet your cash'),
     aliases: ['!9k Slots', '!9k Play Slots'],
     execute(msg, User, Bot) {
         const cooldownkey = `Slots-${msg.author.id}`;

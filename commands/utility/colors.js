@@ -1,4 +1,5 @@
 import { CreateEmbed, SearchString } from '../../utils/functions.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 function ListColorRoles(msg, Bot) {
     const ColorRoles = [];
@@ -67,6 +68,21 @@ function GiveColorRole(msg, Bot) {
 
 export default {
     name: 'colors',
+    data: new SlashCommandBuilder()
+        .setName('colors')
+        .setDescription('Manage color roles')
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('list')
+                .setDescription('List all available color roles'))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('assign')
+                .setDescription('Assign yourself a color role')
+                .addRoleOption(option =>
+                    option.setName('role')
+                        .setDescription('The color role to assign')
+                        .setRequired(true))),
     aliases: ['!9k Color Roles', '!9k Colors', '!9k List Color', '!9k Color'],
     execute(msg, User, Bot) {
         if (SearchString(msg.content, ['!9k Color Roles', '!9k Colors', '!9k List Color'])) {

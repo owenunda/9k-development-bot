@@ -1,7 +1,15 @@
 import { CreateEmbed } from '../../utils/functions.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'play',
+    data: new SlashCommandBuilder()
+        .setName('play')
+        .setDescription('Play music in voice channel (Limited servers)')
+        .addStringOption(option =>
+            option.setName('query')
+                .setDescription('Song or video to search for')
+                .setRequired(true)),
     aliases: ['!9k playdasdawdfafsfgsghrdzgdxgxcvxb'], // Original alias seems like a placeholder or specific trigger
     execute(msg, User, Bot) {
         return; // Original code returns immediately
