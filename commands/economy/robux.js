@@ -4,9 +4,8 @@ import { SlashCommandBuilder } from "discord.js";
 function RobuxTradeRate(interaction, Bot) {
   const Embed = structuredClone(Bot.Embed);
   Embed.Title = "Bot Points To Robux Conversion";
-  Embed.Description = `Current conversion rate. ${
-    Bot.Shop.Bank.RobuxTradeRate
-  } (1000 Bot Point's = ${1000 * Bot.Shop.Bank.RobuxTradeRate})
+  Embed.Description = `Current conversion rate. ${Bot.Shop.Bank.RobuxTradeRate
+    } (1000 Bot Point's = ${1000 * Bot.Shop.Bank.RobuxTradeRate})
 The bank currently has ${Bot.Shop.Bank.Robux} Robux available for trade.
 `;
   Embed.Thumbnail = false;
@@ -18,19 +17,17 @@ function RobuxTrade(interaction, user, Bot) {
   const author = interaction.author || interaction.user;
   const Embed = structuredClone(Bot.Embed);
   Embed.Title = "Trade Bot Cash For Robux?";
-  Embed.Description = `Enter a amount of cash to trade! Conversion Rate: ${
-    Bot.Shop.Bank.RobuxTradeRate
-  }
-The bank has ${Bot.Shop.Bank.Robux} Robux to trade (you can trade ${
-    Bot.Shop.Bank.Robux / Bot.Shop.Bank.RobuxTradeRate
-  } bot point's and must trade at least ${10 / Bot.Shop.Bank.RobuxTradeRate})
+  Embed.Description = `Enter a amount of cash to trade! Conversion Rate: ${Bot.Shop.Bank.RobuxTradeRate
+    }
+The bank has ${Bot.Shop.Bank.Robux} Robux to trade (you can trade ${Bot.Shop.Bank.Robux / Bot.Shop.Bank.RobuxTradeRate
+    } bot point's and must trade at least ${10 / Bot.Shop.Bank.RobuxTradeRate})
 if you dont want to trade right now just enter 0 to cancel.`;
-  interaction.reply({ embeds: [CreateEmbed(Embed)] }).then((Sent) => {
+  interaction.reply({ embeds: [CreateEmbed(Embed)] }).then(() => {
     const msg_filter = (response) => {
       return response.author.id === author.id;
     };
-    Sent.channel
-      .awaitMessages({ filter: msg_filter, max: 1 })
+    interaction.channel
+      .awaitMessages({ filter: msg_filter, max: 1, time: 60000 })
       .then((collected) => {
         const Trade = Math.floor(collected.first().content);
         if (
@@ -49,9 +46,8 @@ https://www.roblox.com/communities/36072783/9kStudiosReborn#!/about`;
 Points Traded: ${Trade}
 Robux Requested: ${Trade * Bot.Shop.Bank.RobuxTradeRate}
 Trade Rate: ${Bot.Shop.Bank.RobuxTradeRate}
-Bank Robux After Trade: ${
-              Bot.Shop.Bank.Robux - Trade * Bot.Shop.Bank.RobuxTradeRate
-            }
+Bank Robux After Trade: ${Bot.Shop.Bank.Robux - Trade * Bot.Shop.Bank.RobuxTradeRate
+              }
 `,
             username: "9k Shop",
           })
@@ -59,12 +55,12 @@ Bank Robux After Trade: ${
               user.cash += -Trade;
               Bot.Shop.Bank.Robux += -(Trade * Bot.Shop.Bank.RobuxTradeRate);
               Bot.Shop.Bank.BotCash += Trade;
-              interaction.reply({ embeds: [CreateEmbed(Embed)] });
+              interaction.followUp({ embeds: [CreateEmbed(Embed)] });
             })
             .catch(function (e) {
               Embed.Title = "Trade Failed D:";
               Embed.Description = `Error: *${e}*`;
-              interaction.reply({ embeds: [CreateEmbed(Embed)] });
+              interaction.followUp({ embeds: [CreateEmbed(Embed)] });
             });
         } else {
           const Embed = structuredClone(Bot.Embed);
@@ -73,7 +69,7 @@ Bank Robux After Trade: ${
 `;
           Embed.Thumbnail = false;
           Embed.Image = false;
-          interaction.reply({ embeds: [CreateEmbed(Embed)] });
+          interaction.followUp({ embeds: [CreateEmbed(Embed)] });
         }
       });
   });
