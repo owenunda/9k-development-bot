@@ -15,14 +15,19 @@ export default {
         .setDescription('Play the slot machine and bet your cash'),
     aliases: ['!9k Slots', '!9k Play Slots'],
     execute(msg, User, Bot) {
-        const cooldownkey = `Slots-${msg.author.id}`;
+        const isInteraction = msg.commandName !== undefined;
+        const userId = isInteraction ? msg.user.id : msg.author.id;
+        const username = isInteraction ? msg.user.username : msg.author.username;
+        const channel = msg.channel;
+
+        const cooldownkey = `Slots-${userId}`;
         if (CheckCoolDown(cooldownkey)) {
             return AlertCoolDown(msg, cooldownkey, Bot)
         }
         SetCoolDown(msg, cooldownkey, 9000);
 
         let maxbet = 100;
-        msg.guild.members.fetch(msg.author.id).then(MemberCache => {
+        msg.guild.members.fetch(userId).then(MemberCache => {
             if (MemberCache.roles.cache.some(role => role.name === '!9k-Gambler')) {
                 maxbet = maxbet * 5;
             }
@@ -31,9 +36,14 @@ export default {
 
             Embed.Title = 'Play Slots?';
             Embed.Description = `Enter a amount of cash to bet! (Max ${maxbet})`;
-            msg.channel.send({ embeds: [CreateEmbed(Embed)] }).then(Sent => {
-                const msg_filter = response => { return response.author.id === msg.author.id };
-                Sent.channel.awaitMessages({ filter: msg_filter, max: 1 }).then((collected) => {
+            
+            const sendMessage = isInteraction 
+                ? msg.reply({ embeds: [CreateEmbed(Embed)] })
+                : channel.send({ embeds: [CreateEmbed(Embed)] });
+            
+            sendMessage.then(Sent => {
+                const msg_filter = response => { return response.author.id === userId };
+                channel.awaitMessages({ filter: msg_filter, max: 1 }).then((collected) => {
                     const Bet = Math.floor(collected.first().content);
                     if (User.cash >= Bet && Bet <= maxbet && Bet >= 1) {
                         const UserRoll = {};
@@ -85,13 +95,13 @@ export default {
 
 ▶️ ` + UserRoll.one + ' | ' + UserRoll.two + ' | ' + UserRoll.three + ` ◀️
 
-User: ${msg.author.username}
+User: ${username}
 Cash Won: ${Winnings}
 Tripple Bonus: ${TrippleBonus}
 JackPot: ${JackPot}
 New Wallet Value: ${User.cash}
 `;
-                                msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+                                channel.send({ embeds: [CreateEmbed(Embed)] });
 
                             }
                         }
@@ -102,11 +112,11 @@ New Wallet Value: ${User.cash}
 
 ▶️ ` + UserRoll.one + ' | ' + UserRoll.two + ' | ' + UserRoll.three + ` ◀️
 
-User: ${msg.author.username}
+User: ${username}
 Cash Won: ${Winnings}
 New Wallet Value: ${User.cash}
 `;
-                            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+                            channel.send({ embeds: [CreateEmbed(Embed)] });
                         }
 
                     }
@@ -114,7 +124,7 @@ New Wallet Value: ${User.cash}
                         const Embed = structuredClone(Bot.Embed);
                         Embed.Title = 'Nope.';
                         Embed.Description = 'You dont have that much money or did not enter a number stop being silly.';
-                        msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+                        channel.send({ embeds: [CreateEmbed(Embed)] });
                     }
                 })
             })
