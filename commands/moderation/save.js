@@ -7,10 +7,14 @@ export default {
         .setName('save')
         .setDescription('Force save bot data (Admin only)'),
     aliases: ['!9k ForceSave'],
-    execute(msg, User, Bot) {
-        CheckAdmin(msg).then(IsAdmin => {
+    async execute(msg, User, Bot) {
+        const isInteraction = msg.commandName !== undefined;
+        const channel = msg.channel;
+        
+        CheckAdmin(msg).then(async IsAdmin => {
+            const userId = isInteraction ? msg.user.id : msg.author.id;
             console.log(IsAdmin);
-            if (IsAdmin == msg.author.id) { }
+            if (IsAdmin == userId) { }
             else {
                 return;
             }
@@ -21,7 +25,13 @@ export default {
                 .setThumbnail('https://9000inc.com/Resources/9000INCLogoV2.png');
             SaveBotUsers(Bot);
             console.log('forcesaving');
-            msg.channel.send({ embeds: [reply] });
+            
+            if (isInteraction) {
+                await msg.reply({ embeds: [reply] });
+            } else {
+                channel.send({ embeds: [reply] });
+            }
+            
             setTimeout(function () {
                 console.log(IsAdmin);
             }, 3000);

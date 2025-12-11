@@ -7,21 +7,53 @@ export default {
         .setName('updateroles')
         .setDescription('Update member roles for all server members (Admin only)'),
     aliases: ['!9k Update Member Roles'],
-    execute(msg, User, Bot) {
-        CheckAdmin(msg).then(IsAdmin => {
-            if (IsAdmin == msg.author.id) { }
+    async execute(msg, User, Bot) {
+        const isInteraction = msg.commandName !== undefined;
+        const channel = msg.channel;
+        
+        // Defer reply for slash commands (this will take a long time)
+        if (isInteraction) {
+            await msg.deferReply();
+        }
+        
+        CheckAdmin(msg).then(async IsAdmin => {
+            const userId = isInteraction ? msg.user.id : msg.author.id;
+            if (IsAdmin == userId) { }
             else {
+                const noPermEmbed = structuredClone(Bot.Embed);
+                noPermEmbed.Title = "Permission Denied";
+                noPermEmbed.Description = "You need admin permissions to use this command.";
+                noPermEmbed.Thumbnail = false;
+                noPermEmbed.Image = false;
+                
+                if (isInteraction) {
+                    await msg.editReply({ embeds: [CreateEmbed(noPermEmbed)] });
+                } else {
+                    channel.send({ embeds: [CreateEmbed(noPermEmbed)] });
+                }
                 return;
             }
 
             let addedCount = 0;
             const role = msg.guild.roles.cache.find(r => r.name === 'Memeber');
-            msg.guild.members.fetch().then(Members => {
-                if (!role) {
-                    return;
+            
+            if (!role) {
+                const noRoleEmbed = structuredClone(Bot.Embed);
+                noRoleEmbed.Title = "Role Not Found";
+                noRoleEmbed.Description = "Could not find the 'Memeber' role in this server.";
+                noRoleEmbed.Thumbnail = false;
+                noRoleEmbed.Image = false;
+                
+                if (isInteraction) {
+                    await msg.editReply({ embeds: [CreateEmbed(noRoleEmbed)] });
+                } else {
+                    channel.send({ embeds: [CreateEmbed(noRoleEmbed)] });
                 }
-
-                Members.forEach(async function (member) {
+                return;
+            }
+            
+            msg.guild.members.fetch().then(async Members => {
+                for (const [id, member] of Members) {
                     if (!member.user.bot && !member.roles.cache.has(role.id)) {
                         try {
                             await member.roles.add(role);
@@ -31,18 +63,23 @@ export default {
                             console.error(`❌ Failed to add role to ${member.user.tag}: ${err.message}`);
                         }
 
-                        // Wait 1.5 seconds before the next request
+                        // Wait 9 seconds before the next request
                         await delay(9000);
                     }
-
-                })
+                }
+                
+                const Embed = structuredClone(Bot.Embed);
+                Embed.Title = "Memeber Roles Updated";
+                Embed.Description = `Added Role To ${addedCount} Members`;
+                Embed.Thumbnail = false;
+                Embed.Image = false;
+                
+                if (isInteraction) {
+                    await msg.editReply({ embeds: [CreateEmbed(Embed)] });
+                } else {
+                    channel.send({ embeds: [CreateEmbed(Embed)] });
+                }
             })
-            const Embed = structuredClone(Bot.Embed);
-            Embed.Title = "Memeber Roles Updated";
-            Embed.Description = `Added Role To ${addedCount} Members`;
-            Embed.Thumbnail = false;
-            Embed.Image = false;
-            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
         })
     }
 }

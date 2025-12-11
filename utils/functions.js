@@ -227,9 +227,11 @@ export function MonthName(Dte) {
 
 export async function CheckAdmin(msg) {
     let found = false;
-    const CacheUser = await msg.guild.members.fetch(msg.author.id);
+    const isInteraction = msg.commandName !== undefined;
+    const userId = isInteraction ? msg.user.id : msg.author.id;
+    const CacheUser = await msg.guild.members.fetch(userId);
     if (CacheUser.roles.cache.has('1177742430716571678')) {
-        found = msg.author.id;
+        found = userId;
     }
     return found;
 }
