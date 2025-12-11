@@ -37,9 +37,19 @@ function BuyShopItem(msg, user, Bot) {
     const Embed = structuredClone(Bot.Embed);
     Embed.Title = 'Buy Item';
     Embed.Description = `Enter item # to buy that item.`;
-    msg.channel.send({ embeds: [CreateEmbed(Embed)] }).then(Sent => {
-        const msg_filter = response => { return response.author.id === msg.author.id };
-        Sent.channel.awaitMessages({ filter: msg_filter, max: 1 }).then((collected) => {
+
+    // Determine if it's an interaction or a message
+    const isInteraction = msg.commandName !== undefined;
+    const userId = isInteraction ? msg.user.id : msg.author.id;
+    const channel = msg.channel;
+
+    const sendMessage = isInteraction
+        ? msg.reply({ embeds: [CreateEmbed(Embed)] })
+        : channel.send({ embeds: [CreateEmbed(Embed)] });
+
+    sendMessage.then(Sent => {
+        const msg_filter = response => { return response.author.id === userId };
+        channel.awaitMessages({ filter: msg_filter, max: 1 }).then((collected) => {
             const Trade = Math.floor(collected.first().content);
             Bot.Shop.Items.forEach(function (Item, ind) {
                 if (ind + 1 == Trade) {
@@ -59,7 +69,7 @@ function BuyShopItem(msg, user, Bot) {
                         Embed.Description = 'Maybe we will add more later sowwy.';
                         Embed.Thumbnail = false;
                         Embed.Image = false;
-                        msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+                        channel.send({ embeds: [CreateEmbed(Embed)] });
                         return;
                     }
                 }
@@ -73,31 +83,32 @@ function BuyShopItem(msg, user, Bot) {
                         //add role
                         try {
                             const role = msg.guild.roles.cache.find(r => r.name === fitem.Role);
-                            msg.member.roles.add(role).then(() => {
+                            const member = isInteraction ? msg.member : msg.member;
+                            member.roles.add(role).then(() => {
                                 user.cash += -fitem.Price;
                                 Bot.Shop.Bank.BotCash += fitem.Price;
-                                msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+                                channel.send({ embeds: [CreateEmbed(Embed)] });
                             })
                         }
                         catch (e) {
                             console.log(e);
                             Embed.Title = 'Purchase Failed D:';
                             Embed.Description = `Couldent find the role or somethin..`;
-                            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+                            channel.send({ embeds: [CreateEmbed(Embed)] });
                         }
                     }
                     else {
                         Bot.WebHooks.Team.send({
-                            content: `<@${msg.author.id}> Bought ${fitem.Title}`,
+                            content: `<@${userId}> Bought ${fitem.Title}`,
                             username: '9k Shop'
                         }).then(() => {
                             user.cash += -fitem.Price;
                             Bot.Shop.Bank.BotCash += fitem.Price;
-                            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+                            channel.send({ embeds: [CreateEmbed(Embed)] });
                         }).catch(function (e) {
                             Embed.Title = 'Purchase Failed D:';
                             Embed.Description = `Error: *${e}*`;
-                            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+                            channel.send({ embeds: [CreateEmbed(Embed)] });
                         });
 
 
@@ -111,7 +122,7 @@ function BuyShopItem(msg, user, Bot) {
                 Embed.Description = 'Could not find a item with that title rip.';
                 Embed.Thumbnail = false;
                 Embed.Image = false;
-                msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+                channel.send({ embeds: [CreateEmbed(Embed)] });
             }
 
         })
@@ -124,13 +135,29 @@ export default {
     name: 'shop',
     data: new SlashCommandBuilder()
         .setName('shop')
-        .setDescription('Shop Items'),
+        .setDescription('Shop Items')
+        .addSubcommand((subcommand) =>
+            subcommand.setName("buy").setDescription("Buy an item from the shop")
+        ),
     aliases: ['!9k Buy', '!9k Purchase', '!9k Shop', '!9k List Shop', '!9k items'],
     execute(interaction, User, Bot) {
         // Check if it's a slash command interaction
         if (interaction.commandName) {
-            // Slash command - show the shop
-            ListShopItems(interaction, Bot);
+            // Slash command
+            let subcommand = null;
+            try {
+                subcommand = interaction.options.getSubcommand();
+            } catch (error) {
+                // No subcommand specified, default to list
+                subcommand = "list";
+            }
+            
+            if (subcommand === "buy") {
+                BuyShopItem(interaction, User, Bot);
+            } else {
+                // Default to list for both "list" subcommand and base command
+                ListShopItems(interaction, Bot);
+            }
         } else {
             // Text command
             const msg = interaction;
