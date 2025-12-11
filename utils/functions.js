@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
-import DateDiff from 'date-diff';
+import pkg from 'date-diff';
+const { default: DateDiff } = pkg;
 
 const cooldowns = new Map();
 const alertcooldowns = new Map();

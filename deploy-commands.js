@@ -21,6 +21,11 @@ for (const folder of commandFolders) {
         const filePath = path.join(commandsPath, file);
         const command = await import(`./commands/${folder}/${file}`);
         if ('data' in command.default && 'execute' in command.default) {
+            // Skip commands with data: false (text-only commands)
+            if (command.default.data === false) {
+                console.log(` Skipped text-only command: ${command.default.name}`);
+                continue;
+            }
             commands.push(command.default.data.toJSON());
             console.log(` Loaded slash command: ${command.default.data.name}`);
         }
