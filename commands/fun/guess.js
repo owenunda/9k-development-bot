@@ -8,12 +8,21 @@ export default {
         .setDescription('Guess the number game - win cash if you guess correctly'),
     aliases: ['!9k guess', '!9k random number', '!9k number guess', '!9k number game'],
     execute(msg, User, Bot) {
+        const isInteraction = msg.commandName !== undefined;
+        const userId = isInteraction ? msg.user.id : msg.author.id;
+        const channel = msg.channel;
+
         const Embed = structuredClone(Bot.Embed);
         Embed.Title = 'Number Guessing!';
         Embed.Description = `Select Your Difficulty (Easy, Medium, Hard, Insane)`;
-        msg.channel.send({ embeds: [CreateEmbed(Embed)] }).then(Sent => {
-            const msg_filter = response => { return response.author.id === msg.author.id };
-            Sent.channel.awaitMessages({ filter: msg_filter, max: 1 }).then((collected) => {
+        
+        const sendMessage = isInteraction 
+            ? msg.reply({ embeds: [CreateEmbed(Embed)] })
+            : channel.send({ embeds: [CreateEmbed(Embed)] });
+        
+        sendMessage.then(Sent => {
+            const msg_filter = response => { return response.author.id === userId };
+            channel.awaitMessages({ filter: msg_filter, max: 1 }).then((collected) => {
                 const res = collected.first().content;
                 let dif = 'Easy';
                 let rmax = 10;
@@ -38,9 +47,9 @@ export default {
                 Embed.Description = `**Im thinking of a number between 1 and ${rmax}**
 Send the number im thinking of for money!
 `;
-                msg.channel.send({ embeds: [CreateEmbed(Embed)] }).then(Sent => {
-                    const msg_filter = response => { return response.author.id === msg.author.id };
-                    Sent.channel.awaitMessages({ filter: msg_filter, max: 1 }).then((collected) => {
+                channel.send({ embeds: [CreateEmbed(Embed)] }).then(Sent => {
+                    const msg_filter = response => { return response.author.id === userId };
+                    channel.awaitMessages({ filter: msg_filter, max: 1 }).then((collected) => {
                         const magicnum = Math.floor(Math.random() * rmax) + 1;
                         if (parseFloat(collected.first().content) == magicnum) {
                             let tag = '';
@@ -82,7 +91,7 @@ New Wallet: ${User.cash}
                             Embed.Description = `**The number was ${magicnum}**
 ${tag}
 `;
-                            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+                            channel.send({ embeds: [CreateEmbed(Embed)] });
                         }
                         else {
                             const Embed = structuredClone(Bot.Embed);
@@ -90,7 +99,7 @@ ${tag}
                             Embed.Description = `**The number was ${magicnum}**
 Skill Issue?
 `;
-                            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+                            channel.send({ embeds: [CreateEmbed(Embed)] });
                         }
                     })
                 })
