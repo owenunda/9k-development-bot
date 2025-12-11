@@ -24,7 +24,15 @@ export function AlertCoolDown(msg, key, Bot) {
     Embed.Description = `⏳ Please wait ${timeLeft} seconds before using this command again.`;
     Embed.Thumbnail = false;
     Embed.Image = false;
-    msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+    
+    // Check if it's a slash command interaction or text message
+    const isInteraction = msg.commandName !== undefined;
+    if (isInteraction) {
+        msg.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
+    } else {
+        msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+    }
+    
     alertcooldowns.set(key, now + 1500);
     setTimeout(() => alertcooldowns.delete(key), 1500);
 }

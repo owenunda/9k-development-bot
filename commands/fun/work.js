@@ -57,13 +57,17 @@ export default {
         .setDescription('Work a random job to earn cash'),
     aliases: ['!9k Work'],
     execute(msg, User, Bot) {
-        const cooldownkey = `Work-${msg.author.id}`;
+        const isInteraction = msg.commandName !== undefined;
+        const userId = isInteraction ? msg.user.id : msg.author.id;
+        const channel = msg.channel;
+
+        const cooldownkey = `Work-${userId}`;
         if (CheckCoolDown(cooldownkey)) {
             return AlertCoolDown(msg, cooldownkey, Bot)
         }
         SetCoolDown(msg, cooldownkey, 5000);
 
-        msg.guild.members.fetch(msg.author.id).then(MemberCache => {
+        msg.guild.members.fetch(userId).then(MemberCache => {
             const Embed = structuredClone(Bot.Embed);
             let Job = BasicWork[Math.floor(Math.random() * BasicWork.length)];
             if (Job.Tone == 4) {
@@ -100,7 +104,12 @@ export default {
             Embed.Description = Job.Desc + `
 
 New Wallet Value: ${User.cash}`;
-            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+            
+            if (isInteraction) {
+                msg.reply({ embeds: [CreateEmbed(Embed)] });
+            } else {
+                channel.send({ embeds: [CreateEmbed(Embed)] });
+            }
         })
     }
 }
