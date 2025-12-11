@@ -12,25 +12,40 @@ export default {
             option.setName('code')
                 .setDescription('The code to redeem')
                 .setRequired(true)),
-    aliases: [], // Aliases will be handled by checking against Bot.Codes in index.js or here?
-    // The original code checks if msg.content is in Bot.Codes.
-    // I should probably export the check logic or handle it in index.js to route here.
-    // Or I can make this command handle the logic if routed correctly.
-    // For now, I'll assume index.js will route to this if it matches a code.
+    aliases: [],
     execute(msg, User, Bot) {
+        const isInteraction = msg.commandName !== undefined;
+        const userId = isInteraction ? msg.user.id : msg.author.id;
+        const channel = msg.channel;
+        
+        // Get the code based on command type
+        let code;
+        if (isInteraction) {
+            // Slash command - get code from option and add prefix for comparison
+            const codeInput = msg.options.getString('code');
+            code = '!9k ' + codeInput;
+        } else {
+            // Text command - use full message content
+            code = msg.content;
+        }
+        
         let isused = false;
         usedcodes.forEach(function (used) {
-            if (used.user == msg.author.id && used.code == msg.content) {
+            if (used.user == userId && used.code == code) {
                 const Embed = structuredClone(Bot.Embed);
                 Embed.Title = "You used this code already.. -.-";
                 Embed.Description = `rip`;
-                msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+                
+                if (isInteraction) {
+                    msg.reply({ embeds: [CreateEmbed(Embed)] });
+                } else {
+                    channel.send({ embeds: [CreateEmbed(Embed)] });
+                }
                 isused = true;
             }
         });
         if (isused) { return }
 
-        const code = msg.content;
         let codecash = 0;
         if (code == '!9k Lazyyy') {
             codecash = 125;
@@ -93,11 +108,16 @@ export default {
             codecash = 90;
         }
         User.cash += codecash;
-        usedcodes.push({ user: msg.author.id, code: code });
+        usedcodes.push({ user: userId, code: code });
         const Embed = structuredClone(Bot.Embed);
         Embed.Title = `Code: ${code} Activated`;
         Embed.Description = `heres $${codecash}
 New Wallet: ${User.cash}`;
-        msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+        
+        if (isInteraction) {
+            msg.reply({ embeds: [CreateEmbed(Embed)] });
+        } else {
+            channel.send({ embeds: [CreateEmbed(Embed)] });
+        }
     }
 }
