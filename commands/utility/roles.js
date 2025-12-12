@@ -62,7 +62,9 @@ function GiveChannelRole(msg, Bot, roleFromSlash) {
         else {
             const Embed = structuredClone(Bot.Embed);
             Embed.Title = "Role?";
-            Embed.Description = 'Please mention a channel role to have that role added or removed. `!9k Roles` for a list of roles.';
+            Embed.Description = isInteraction
+                ? 'That role is not a channel role. This command only works with roles that start with `!9kRole-`. Use `/roles list` to see valid roles, then run `/roles toggle` again.'
+                : 'Please mention a channel role to have that role added or removed. `!9k Roles` for a list of roles.';
             Embed.Thumbnail = false;
             Embed.Image = false;
             if (isInteraction) {
