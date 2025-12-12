@@ -160,6 +160,14 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
 
         if (!command) {
                 console.error(`No command matching ${interaction.commandName} was found.`);
+                try {
+                        await interaction.reply({
+                                content: `Command "/${interaction.commandName}" is not loaded on the bot right now. Try restarting the bot.`,
+                                ephemeral: true,
+                        });
+                } catch {
+                        // ignore if interaction already expired
+                }
                 return;
         }
 

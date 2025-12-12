@@ -2,7 +2,7 @@ import { CreateEmbed, CheckAdmin, delay } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
 export default {
-    name: 'updateRoles',
+    name: 'updateroles',
     data: new SlashCommandBuilder()
         .setName('updateroles')
         .setDescription('Update member roles for all server members (Admin only)'),
