@@ -38,16 +38,31 @@ console.log(`\\n Found ${commands.length} slash command(s) to deploy.\\n`);
 // Construct and prepare an instance of the REST module
 const rest = new REST().setToken(config.token);
 
+const env = String(config.environment ?? 'development').toLowerCase();
+const isProduction = env === 'production' || env === 'prod';
+
 // and deploy your commands!
 (async () => {
     try {
         console.log(`🔄 Started refreshing ${commands.length} application (/) commands.`);
 
-        // The put method is used to fully refresh all commands in the guild with the current set
-        const data = await rest.put(
-            Routes.applicationGuildCommands(config.clientId, config.guildId),
-            { body: commands }
-        );
+        let data;
+        if (isProduction) {
+            console.log('  Environment = production → deploying GLOBAL slash commands.');
+            data = await rest.put(
+                Routes.applicationCommands(config.clientId),
+                { body: commands }
+            );
+        } else {
+            if (!config.guildId) {
+                throw new Error('config.guildId is required when environment is development.');
+            }
+            console.log(`  Environment = development → deploying GUILD slash commands to ${config.guildId}.`);
+            data = await rest.put(
+                Routes.applicationGuildCommands(config.clientId, config.guildId),
+                { body: commands }
+            );
+        }
 
         console.log(`  Successfully reloaded ${data.length} application (/) commands.`);
     } catch (error) {
