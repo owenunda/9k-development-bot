@@ -1,5 +1,11 @@
 import { CreateEmbed } from '../../utils/functions.js';
-import { SlashCommandBuilder } from 'discord.js';
+import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ComponentType,
+    SlashCommandBuilder,
+} from 'discord.js';
 
 function getHelpModeFromPrefixMessage(msg) {
     const text = (msg.content || '').toLowerCase();
@@ -39,35 +45,13 @@ function buildSlashCommandsHelp(Bot) {
     return lines.join('\n\n');
 }
 
-export default {
-    name: 'help',
-    data: new SlashCommandBuilder()
-        .setName('help')
-        .setDescription('Display all available bot commands and information')
-        .addStringOption(option =>
-            option
-                .setName('mode')
-                .setDescription('Which commands to show')
-                .setRequired(false)
-                .addChoices(
-                    { name: 'Both (default)', value: 'both' },
-                    { name: 'Prefix (!9k)', value: 'prefix' },
-                    { name: 'Slash (/)', value: 'slash' },
-                )),
-    aliases: ['!9k Help', '!9k Info', '!9k Commands', '!9k Cmds', '!9k'],
-    async execute(msg, User, Bot) {
-        const isInteraction = msg.commandName !== undefined;
+function buildHelpEmbed(mode, Bot) {
+    const Embed = structuredClone(Bot.Embed);
+    Embed.Title = "Bot Commands";
 
-        const mode = isInteraction
-            ? (msg.options.getString('mode') || 'both')
-            : getHelpModeFromPrefixMessage(msg);
+    const prefixHelp = `**!9k Help** - *Helpful info on using our bot!*
 
-        const Embed = structuredClone(Bot.Embed);
-        Embed.Title = "Bot Commands"
-
-        const prefixHelp = `**!9k Help** - *Helpful info on using our bot!*
-
-Tip: Use **\`/help mode:slash\`** to see slash commands, or **\`!9k help slash\`**.
+Tip: Use the buttons below to switch views.
 
 **!9k Messages (All, Year, Month, Week, Day, Hour) #Channel** - *List server message's within time ranges and a specific channel if added "!9k Messages Week #Chat" shows messages for the last 7 days in the channel named Chat.*
 
@@ -95,37 +79,111 @@ Tip: Use **\`/help mode:slash\`** to see slash commands, or **\`!9k help slash\`
 
 **!9k Slots** - *A slot game you can play to win and lose money!*
 
-**!9k bj** - *Play some black jack and become the next high roller!*
-
-**!9k Transfer** - *Let's you send some of your cash to another user beware the banking fee's!*
-
-**!9k 9kTube** - *Info about our youtube extension!*
-
-**!9k Coin Flip** - *Flip a coin see the result good for solving dispute's*
-
-**!9k Guess** - *Guess the number im thinking of get it right and win some cash!*
-
-**!9k Invite** - *Get a link to invite 9k to your server it's free!*
-
+**!9k bj** - *Play some black jack and become the next high roller!*\n
+**!9k Transfer** - *Let's you send some of your cash to another user beware the banking fee's!*\n
+**!9k 9kTube** - *Info about our youtube extension!*\n
+**!9k Coin Flip** - *Flip a coin see the result good for solving dispute's*\n
+**!9k Guess** - *Guess the number im thinking of get it right and win some cash!*\n
+**!9k Invite** - *Get a link to invite 9k to your server it's free!*\n
 **!9k Server List** - *List the server's 9k is in.*
-`
+`;
 
-        const slashHelp = buildSlashCommandsHelp(Bot);
+    const slashHelp = buildSlashCommandsHelp(Bot);
 
-        if (mode === 'prefix') {
-            Embed.Description = `__Prefix Commands__\n\n${prefixHelp}`;
-        } else if (mode === 'slash') {
-            Embed.Description = `__Slash Commands__\n\n${slashHelp}`;
-        } else {
-            Embed.Description = `__Prefix Commands__\n\n${prefixHelp}\n\n__Slash Commands__\n\n${slashHelp}`;
-        }
+    if (mode === 'prefix') {
+        Embed.Description = `__Prefix Commands__\n\n${prefixHelp}`;
+    } else if (mode === 'slash') {
+        Embed.Description = `__Slash Commands__\n\n${slashHelp}`;
+    } else {
+        Embed.Description = `__Prefix Commands__\n\n${prefixHelp}\n\n__Slash Commands__\n\n${slashHelp}`;
+    }
 
-        Embed.Thumbnail = false
-        Embed.Image = false
-        if (isInteraction) {
-            await msg.reply({ embeds: [CreateEmbed(Embed)] });
-        } else {
-            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
-        }
+    Embed.Thumbnail = false;
+    Embed.Image = false;
+    return Embed;
+}
+
+function buildHelpComponents(activeMode) {
+    const prefixBtn = new ButtonBuilder()
+        .setCustomId('help:prefix')
+        .setLabel('Prefix Commands')
+        .setStyle(activeMode === 'prefix' ? ButtonStyle.Primary : ButtonStyle.Secondary);
+
+    const bothBtn = new ButtonBuilder()
+        .setCustomId('help:both')
+        .setLabel('Both')
+        .setStyle(activeMode === 'both' ? ButtonStyle.Primary : ButtonStyle.Secondary);
+
+    const slashBtn = new ButtonBuilder()
+        .setCustomId('help:slash')
+        .setLabel('Slash Commands')
+        .setStyle(activeMode === 'slash' ? ButtonStyle.Primary : ButtonStyle.Secondary);
+
+    return [new ActionRowBuilder().addComponents(prefixBtn, bothBtn, slashBtn)];
+}
+
+export default {
+    name: 'help',
+    data: new SlashCommandBuilder()
+        .setName('help')
+        .setDescription('Display all available bot commands and information')
+        .addStringOption(option =>
+            option
+                .setName('mode')
+                .setDescription('Which commands to show')
+                .setRequired(false)
+                .addChoices(
+                    { name: 'Both (default)', value: 'both' },
+                    { name: 'Prefix (!9k)', value: 'prefix' },
+                    { name: 'Slash (/)', value: 'slash' },
+                )),
+    aliases: ['!9k Help', '!9k Info', '!9k Commands', '!9k Cmds', '!9k'],
+    async execute(msg, User, Bot) {
+        const isInteraction = msg.commandName !== undefined;
+
+        let mode = isInteraction
+            ? (msg.options.getString('mode') || 'both')
+            : getHelpModeFromPrefixMessage(msg);
+
+        const ownerId = isInteraction ? msg.user.id : msg.author.id;
+
+        const payload = {
+            embeds: [CreateEmbed(buildHelpEmbed(mode, Bot))],
+            components: buildHelpComponents(mode),
+        };
+
+        const sent = isInteraction
+            ? await msg.reply({ ...payload, fetchReply: true })
+            : await msg.channel.send(payload);
+
+        const collector = sent.createMessageComponentCollector({
+            componentType: ComponentType.Button,
+            time: 120_000,
+        });
+
+        collector.on('collect', async (i) => {
+            if (i.user.id !== ownerId) {
+                return i.reply({ content: 'This help menu is not for you.', ephemeral: true });
+            }
+
+            if (i.customId === 'help:prefix') mode = 'prefix';
+            else if (i.customId === 'help:slash') mode = 'slash';
+            else if (i.customId === 'help:both') mode = 'both';
+
+            const nextPayload = {
+                embeds: [CreateEmbed(buildHelpEmbed(mode, Bot))],
+                components: buildHelpComponents(mode),
+            };
+
+            await i.update(nextPayload);
+        });
+
+        collector.on('end', async () => {
+            try {
+                await sent.edit({ components: [] });
+            } catch {
+                // ignore
+            }
+        });
     }
 }
