@@ -22,14 +22,21 @@ function ListColorRoles(msg, Bot) {
 **!9k color @Role to get a color role!**`;
         Embed.Thumbnail = false;
         Embed.Image = false;
-        msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+
+        const isInteraction = msg.commandName !== undefined;
+        if (isInteraction) {
+            if (msg.deferred || msg.replied) return msg.editReply({ embeds: [CreateEmbed(Embed)] });
+            return msg.reply({ embeds: [CreateEmbed(Embed)] });
+        }
+        return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
     })
 }
 
-function GiveColorRole(msg, Bot) {
+function GiveColorRole(msg, Bot, roleFromSlash) {
+    const isInteraction = msg.commandName !== undefined;
     let RoleRes = 'Removed:';
     let duplicate = false;
-    const Role = msg.mentions.roles.first();
+    const Role = roleFromSlash || msg.mentions.roles.first();
     if (Role) {
         if (SearchString(Role.name, ['!9kColor-'])) {
             msg.member.roles.cache.each(UserRole => {
@@ -50,7 +57,11 @@ function GiveColorRole(msg, Bot) {
             Embed.Description = RoleRes;
             Embed.Thumbnail = false;
             Embed.Image = false;
-            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+            if (isInteraction) {
+                if (msg.deferred || msg.replied) return msg.editReply({ embeds: [CreateEmbed(Embed)] });
+                return msg.reply({ embeds: [CreateEmbed(Embed)] });
+            }
+            return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
         }
         else {
             const Embed = structuredClone(Bot.Embed);
@@ -58,7 +69,11 @@ function GiveColorRole(msg, Bot) {
             Embed.Description = 'Please mention a color role to have that role added. `!9k Color Roles` for list of roles.';
             Embed.Thumbnail = false;
             Embed.Image = false;
-            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+            if (isInteraction) {
+                if (msg.deferred || msg.replied) return msg.editReply({ embeds: [CreateEmbed(Embed)] });
+                return msg.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
+            }
+            return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
         }
     }
     else {
@@ -84,11 +99,27 @@ export default {
                         .setDescription('The color role to assign')
                         .setRequired(true))),
     aliases: ['!9k Color Roles', '!9k Colors', '!9k List Color', '!9k Color'],
-    execute(msg, User, Bot) {
+    async execute(msg, User, Bot) {
+        const isInteraction = msg.commandName !== undefined;
+
+        if (isInteraction) {
+            await msg.deferReply();
+            const sub = msg.options.getSubcommand();
+            if (sub === 'list') {
+                return ListColorRoles(msg, Bot);
+            }
+            if (sub === 'assign') {
+                const role = msg.options.getRole('role');
+                return GiveColorRole(msg, Bot, role);
+            }
+            return;
+        }
+
         if (SearchString(msg.content, ['!9k Color Roles', '!9k Colors', '!9k List Color'])) {
-            ListColorRoles(msg, Bot);
-        } else if (SearchString(msg.content, ['!9k Color'])) {
-            GiveColorRole(msg, Bot);
+            return ListColorRoles(msg, Bot);
+        }
+        if (SearchString(msg.content, ['!9k Color'])) {
+            return GiveColorRole(msg, Bot);
         }
     }
 }

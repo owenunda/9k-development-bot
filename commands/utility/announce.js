@@ -8,20 +8,49 @@ export default {
         .setDescription('Make an announcement in a specified channel')
         .addChannelOption(option => option.setName('channel').setDescription('Channel to announce in').setRequired(true))
         .addStringOption(option => option.setName('message').setDescription('Announcement message').setRequired(true)),
-    async execute(interaction, User, Bot) {
-        // Handle both interaction and legacy message if needed, though this is primarily a slash command
-        if (!interaction.isChatInputCommand || !interaction.isChatInputCommand()) return;
+    async execute(msg, User, Bot) {
+        const isInteraction = msg.commandName !== undefined;
 
-        const channel = interaction.options.getChannel('channel');
-        const message = interaction.options.getString('message');
+        let channel;
+        let message;
 
-        if (!interaction.member.permissions.has('SendMessages')) {
+        if (isInteraction) {
+            channel = msg.options.getChannel('channel');
+            message = msg.options.getString('message');
+        } else {
+            channel = msg.mentions.channels.first();
+            if (!channel) {
+                const Embed = structuredClone(Bot.Embed);
+                Embed.Title = "Channel Required";
+                Embed.Description = "Mention a channel and include a message. Example: `!9k Announce #announcements Hello everyone!`";
+                Embed.Thumbnail = false;
+                Embed.Image = false;
+                return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+            }
+            // Remove the command prefix part and the channel mention, keep the rest as message
+            message = msg.content.replace(channel.toString(), '').trim();
+            // If the message still contains the command words, keep it simple: just require non-empty
+            if (!message) {
+                const Embed = structuredClone(Bot.Embed);
+                Embed.Title = "Message Required";
+                Embed.Description = "Please include the announcement message after the channel mention.";
+                Embed.Thumbnail = false;
+                Embed.Image = false;
+                return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+            }
+        }
+
+        const memberPerms = isInteraction ? msg.member?.permissions : msg.member?.permissions;
+        if (!memberPerms || !memberPerms.has('SendMessages')) {
             const Embed = structuredClone(Bot.Embed);
             Embed.Title = "Permission Denied";
             Embed.Description = "You do not have permission to send messages.";
             Embed.Thumbnail = false;
             Embed.Image = false;
-            return interaction.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
+            if (isInteraction) {
+                return msg.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
+            }
+            return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
         }
 
         try {
@@ -33,7 +62,10 @@ export default {
             Embed.Thumbnail = false;
             Embed.Image = false;
             
-            return interaction.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
+            if (isInteraction) {
+                return msg.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
+            }
+            return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
         } catch (error) {
             console.error(error);
             const Embed = structuredClone(Bot.Embed);
@@ -41,7 +73,10 @@ export default {
             Embed.Description = "Failed to send announcement. Please check my permissions.";
             Embed.Thumbnail = false;
             Embed.Image = false;
-            return interaction.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
+            if (isInteraction) {
+                return msg.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
+            }
+            return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
         }
     }
 }

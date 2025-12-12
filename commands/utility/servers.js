@@ -7,7 +7,11 @@ export default {
         .setName('servers')
         .setDescription('List all servers the 9k bot is in'),
     aliases: ['!9k Servers Im In', '!9k Server List', '!9k List Servers', '!9k Servers List', '!9k All Server', '!9k Get Server', '!9k what servers are you in'],
-    execute(msg, User, Bot) {
+    async execute(msg, User, Bot) {
+        const isInteraction = msg.commandName !== undefined;
+        if (isInteraction) {
+            await msg.deferReply();
+        }
         const Guilds = Bot.Client.guilds.cache;
 
         const Embed = structuredClone(Bot.Embed);
@@ -21,6 +25,10 @@ export default {
 *Member Since: ${Guild.joinedAt}*
 `;
         });
-        msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+        if (isInteraction) {
+            await msg.editReply({ embeds: [CreateEmbed(Embed)] });
+        } else {
+            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+        }
     }
 }

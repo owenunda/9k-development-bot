@@ -22,12 +22,19 @@ function ListChannelRoles(msg, Bot) {
 **!9k Role @Role to get a channel role!**`;
         Embed.Thumbnail = false;
         Embed.Image = false;
-        msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+
+        const isInteraction = msg.commandName !== undefined;
+        if (isInteraction) {
+            if (msg.deferred || msg.replied) return msg.editReply({ embeds: [CreateEmbed(Embed)] });
+            return msg.reply({ embeds: [CreateEmbed(Embed)] });
+        }
+        return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
     })
 }
 
-function GiveChannelRole(msg, Bot) {
-    const Role = msg.mentions.roles.first();
+function GiveChannelRole(msg, Bot, roleFromSlash) {
+    const isInteraction = msg.commandName !== undefined;
+    const Role = roleFromSlash || msg.mentions.roles.first();
     let RoleRes = ' Added';
     if (Role) {
         if (SearchString(Role.name, ['!9kRole-'])) {
@@ -46,7 +53,11 @@ function GiveChannelRole(msg, Bot) {
             Embed.Description = ``;
             Embed.Thumbnail = false;
             Embed.Image = false;
-            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+            if (isInteraction) {
+                if (msg.deferred || msg.replied) return msg.editReply({ embeds: [CreateEmbed(Embed)] });
+                return msg.reply({ embeds: [CreateEmbed(Embed)] });
+            }
+            return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
         }
         else {
             const Embed = structuredClone(Bot.Embed);
@@ -54,7 +65,11 @@ function GiveChannelRole(msg, Bot) {
             Embed.Description = 'Please mention a channel role to have that role added or removed. `!9k Roles` for a list of roles.';
             Embed.Thumbnail = false;
             Embed.Image = false;
-            msg.channel.send({ embeds: [CreateEmbed(Embed)] });
+            if (isInteraction) {
+                if (msg.deferred || msg.replied) return msg.editReply({ embeds: [CreateEmbed(Embed)] });
+                return msg.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
+            }
+            return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
         }
     }
     else {
@@ -80,7 +95,21 @@ export default {
                         .setDescription('The channel role to toggle')
                         .setRequired(true))),
     aliases: ['!9k Channel Roles', '!9k Roles', '!9k List Role', '!9k List Channel Role', '!9k Role'],
-    execute(msg, User, Bot) {
+    async execute(msg, User, Bot) {
+        const isInteraction = msg.commandName !== undefined;
+        if (isInteraction) {
+            await msg.deferReply();
+            const sub = msg.options.getSubcommand();
+            if (sub === 'list') {
+                return ListChannelRoles(msg, Bot);
+            }
+            if (sub === 'toggle') {
+                const role = msg.options.getRole('role');
+                return GiveChannelRole(msg, Bot, role);
+            }
+            return;
+        }
+
         if (SearchString(msg.content, ['!9k Channel Roles', '!9k Roles', '!9k List Role', '!9k List Channel Role'])) {
             ListChannelRoles(msg, Bot);
         } else if (SearchString(msg.content, ['!9k Role'])) {
