@@ -39,6 +39,9 @@ Bot.Admin = {};
 Bot.Admin.SQL = {};
 Bot.Admin.SQL.User = config.database.user;
 Bot.Admin.SQL.Password = config.database.password;
+Bot.Admin.SQL.Host = config.database.host || '127.0.0.1';
+Bot.Admin.SQL.Database = config.database.database || 'webdata';
+Bot.Admin.SQL.Port = config.database.port || 3306;
 Bot.Codes = config.codes;
 
 Bot.WebHooks = {

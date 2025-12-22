@@ -113,10 +113,11 @@ export function SaveUser(User, Bot) {
 
 export function ConnectDB(Bot) {
     const connection = Bot.MySql.createConnection({
-        host: '127.0.0.1',
+        host: Bot.Admin.SQL.Host,
         user: Bot.Admin.SQL.User,
         password: Bot.Admin.SQL.Password,
-        database: 'webdata'
+        database: Bot.Admin.SQL.Database,
+        port: Bot.Admin.SQL.Port
     });
     connection.connect(function (err) {
         if (err) console.error('Error connecting to DB:', err.code);
