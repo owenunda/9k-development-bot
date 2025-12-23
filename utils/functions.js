@@ -238,3 +238,126 @@ export async function CheckAdmin(msg) {
 }
 
 export const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+/* Voting System Functions */
+
+export function GetServer(serverid, Bot) {
+    if (Bot.Servers) {
+        return Bot.Servers.find(s => s.serverid === serverid) || false;
+    }
+    return false;
+}
+
+export function AddServer(serverid, link, Bot) {
+    const connection = ConnectDB(Bot);
+    connection.connect();
+    
+    connection.query(`SELECT * FROM BotServers WHERE serverid = '${serverid}'`, function (error, results, fields) {
+        if (error) {
+            console.error('AddServer Select Error:', error);
+            connection.end();
+            return;
+        }
+
+        if (results.length > 0) {
+            // Server exists, Update it
+             connection.query(`UPDATE BotServers SET link = '${link}' WHERE serverid = '${serverid}'`, function(updateErr) {
+                 if (updateErr) console.error('AddServer Update Error:', updateErr);
+                 
+                 // Update Cache
+                 if (Bot.Servers) {
+                     const existing = Bot.Servers.find(s => s.serverid === serverid);
+                     if (existing) existing.link = link;
+                 }
+                 connection.end();
+             });
+        } else {
+            // Server does not exist, Insert it
+            connection.query(`INSERT INTO BotServers (id, serverid, link, points) VALUES (NULL, '${serverid}', '${link}', 0)`, function (insertErr) {
+                if (insertErr) console.error('AddServer Insert Error:', insertErr);
+                else {
+                    // Update Cache
+                    if (Bot.Servers) {
+                        Bot.Servers.push({ serverid: serverid, link: link, points: 0 });
+                    }
+                }
+                connection.end();
+            });
+        }
+    });
+}
+
+export function UpdateServerPoints(serverid, points, Bot) {
+    const connection = ConnectDB(Bot);
+    connection.connect();
+    connection.query(`UPDATE BotServers SET points = points + (${points}) WHERE serverid = '${serverid}'`, function (error, results, fields) {
+        if (error) console.error('UpdateServerPoints Error:', error);
+    });
+    connection.end();
+    
+    if (Bot.Servers) {
+        const server = Bot.Servers.find(s => s.serverid === serverid);
+        if (server) {
+            server.points += points;
+        }
+    }
+}
+
+export function GetPromoUser(userid, Bot) {
+    return new Promise((resolve, reject) => {
+        const connection = ConnectDB(Bot);
+        connection.query(`SELECT * FROM PromoUsers WHERE userid = '${userid}'`, function (error, results, fields) {
+            connection.end();
+            if (error) {
+                console.error('GetPromoUser Error:', error);
+                resolve(false);
+            } else {
+                resolve(results.length > 0 ? results[0] : false);
+            }
+        });
+    });
+}
+
+export function AddPromoUser(userid, serverid, Bot) {
+    const connection = ConnectDB(Bot);
+    connection.connect();
+    connection.query(`INSERT INTO PromoUsers (id, userid, serverid) VALUES (NULL, '${userid}', '${serverid}')`, function (error, results, fields) {
+        if (error) console.error('AddPromoUser Error:', error);
+    });
+    connection.end();
+}
+
+export function UpdatePromoUserVote(userid, oldServerId, newServerId, Bot) {
+    const connection = ConnectDB(Bot);
+    connection.connect();
+    
+    connection.query(`UPDATE PromoUsers SET serverid = '${newServerId}' WHERE userid = '${userid}'`, function (error, results, fields) {
+        if (error) console.error('UpdatePromoUserVote Error:', error);
+    });
+    
+    connection.end();
+}
+
+export function ResetMonthlyStats(Bot) {
+    const connection = ConnectDB(Bot);
+    connection.connect();
+    connection.query('TRUNCATE TABLE BotServers', (err) => {
+        if(err) console.error("Reset Error BotServers", err);
+        else if (Bot.Servers) Bot.Servers = [];
+    });
+    connection.query('TRUNCATE TABLE PromoUsers', (err) => {
+        if (err) console.error("Reset Error PromoUsers", err);
+    });
+    connection.end();
+}
+
+export function CheckMonthlyReset(Bot) {
+    const Now = new Date();
+    if (Now.getDate() === 1) {
+        if (!Bot.LastReset || Bot.LastReset.getMonth() !== Now.getMonth()) {
+            console.log("Performing Monthly Reset...");
+            ResetMonthlyStats(Bot);
+            Bot.LastReset = Now;
+        }
+    }
+}

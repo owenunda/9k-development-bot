@@ -1,30 +1,45 @@
-import { CreateEmbed, SearchString } from '../../utils/functions.js';
+import { CreateEmbed } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'servers',
     data: new SlashCommandBuilder()
         .setName('servers')
-        .setDescription('List all servers the 9k bot is in'),
-    aliases: ['!9k Servers Im In', '!9k Server List', '!9k List Servers', '!9k Servers List', '!9k All Server', '!9k Get Server', '!9k what servers are you in'],
+        .setDescription('List the top servers on the leaderboard'),
+    aliases: ['!9k Servers', '!9k Servers List', '!9k Leaderboard', '!9k Server List', '/servers'],
     async execute(msg, User, Bot) {
         const isInteraction = msg.commandName !== undefined;
         if (isInteraction) {
             await msg.deferReply();
         }
-        const Guilds = Bot.Client.guilds.cache;
 
         const Embed = structuredClone(Bot.Embed);
-        Embed.Title = "List of guild's I am in!";
-        Embed.Description = ``;
+        Embed.Title = "Server Leaderboard";
+        Embed.Description = `Here are the top servers voted by users!\n\n`;
         Embed.Thumbnail = false;
         Embed.Image = false;
 
-        Guilds.each(Guild => {
-            Embed.Description += `**Guild: ${Guild.name}** *Online Members - ${Guild.approximatePresenceCount} / ${Guild.memberCount}*
-*Member Since: ${Guild.joinedAt}*
-`;
-        });
+        // Get servers from Bot.Servers
+        let Servers = Bot.Servers || [];
+        
+        Servers.sort((a, b) => b.points - a.points);
+        
+        const TopServers = Servers.slice(0, 15);
+        
+        if (TopServers.length === 0) {
+            Embed.Description = "No servers have been registered yet or the leaderboard is being reset.";
+        } else {
+            let i = 1;
+            TopServers.forEach(server => {
+                const Guild = Bot.Client.guilds.cache.get(server.serverid);
+                const ServerName = Guild ? Guild.name : `Unknown Server (${server.serverid})`;
+                const InviteLink = server.link && server.link.startsWith('http') ? `[Join Server](${server.link})` : 'No Link';
+                
+                Embed.Description += `**${i}. ${ServerName}** - 🏆 ${server.points} Points\n${InviteLink}\n\n`;
+                i++;
+            });
+        }
+
         if (isInteraction) {
             await msg.editReply({ embeds: [CreateEmbed(Embed)] });
         } else {

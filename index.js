@@ -3,7 +3,7 @@ import { Client, Events, GatewayIntentBits, EmbedBuilder, WebhookClient, Collect
 import fs from 'fs';
 import path from 'path';
 import  config  from './config.js';
-import { GetUser, AddUser, AddServerMessageSQL, SearchString, SaveBotUsers, ReturnDB, AlertCoolDown, SetCoolDown, CheckCoolDown } from './utils/functions.js';
+import { GetUser, AddUser, AddServerMessageSQL, SearchString, SaveBotUsers, ReturnDB, AlertCoolDown, SetCoolDown, CheckCoolDown, CheckMonthlyReset } from './utils/functions.js';
 import * as mysql2 from 'mysql2';
 import * as canvas from 'canvas';
 import * as ytSearch from 'yt-search';
@@ -14,6 +14,7 @@ import * as chartjs from 'chartjs-node-canvas';
 /* Main Variables */
 const Bot = {};
 Bot.Users = false;
+Bot.Servers = false;
 Bot.Token = config.token;
 Bot.MySql = mysql2;
 Bot.Canvas = canvas;
@@ -94,12 +95,15 @@ for (const folder of commandFolders) {
 
 /* Init */
 ReturnDB('BotUsers', Bot).then(function (value) { Bot.Users = value });
+ReturnDB('BotUsers', Bot).then(function (value) { Bot.Users = value });
+ReturnDB('BotServers', Bot).then(function (value) { Bot.Servers = value });
 ReturnDB('Messages', Bot).then(function (value) { Bot.ServerMessages = value });
 
 Bot.Client.once(Events.ClientReady, readyClient => {
         console.log(`Ready! Logged in as ${readyClient.user.tag}`);
         Bot.Client.user.setPresence({ activity: { name: 'BotActivity', type: 'WATCHING' }, status: 'online' })
-        setInterval(function () { SaveBotUsers(Bot) }, 5000000)
+        CheckMonthlyReset(Bot);
+        setInterval(function () { SaveBotUsers(Bot); CheckMonthlyReset(Bot); }, 5000000)
 });
 
 Bot.Client.on('messageCreate', msg => {
