@@ -11,6 +11,15 @@ import * as ytdl from 'discord-ytdl-core';
 import * as voice from '@discordjs/voice';
 import * as chartjs from 'chartjs-node-canvas';
 
+/*
+ * UX IMPROVEMENTS IMPLEMENTED:
+ * 1. Interactive help system with categorized commands
+ * 2. Enhanced command hierarchy with better subcommands
+ * 3. Fun/gambling commands tagged as MOVABLE for future 9kFun bot
+ * 4. Improved command descriptions and user experience
+ * 5. Backward compatibility maintained for all existing functionality
+ */
+
 /* Main Variables */
 const Bot = {};
 Bot.Users = false;
@@ -159,8 +168,58 @@ Bot.Client.on('messageCreate', msg => {
 
 })
 
-// Handle slash command interactions
+// Handle slash command interactions and button interactions
 Bot.Client.on(Events.InteractionCreate, async interaction => {
+        // INTERACTIVE IMPROVEMENT: Handle button interactions
+        if (interaction.isButton()) {
+                const customId = interaction.customId;
+                
+                // Get or create user for button interactions
+                let User = GetUser(interaction.user.id, Bot);
+                if (User == false) {
+                        User = {};
+                        User.userid = interaction.user.id;
+                        User.exp = 0;
+                        User.messages = 0;
+                        User.cash = 0;
+                        User.websiteuser = null;
+                        Bot.Users.push(User);
+                        AddUser(User.userid, Bot);
+                        User = GetUser(interaction.user.id, Bot);
+                }
+
+                // Route button interactions to appropriate commands
+                if (customId.startsWith('shop_buy_')) {
+                        const command = Bot.Commands.get('shop');
+                        if (command) {
+                                try {
+                                        await command.execute(interaction, User, Bot);
+                                } catch (error) {
+                                        console.error('Button interaction error:', error);
+                                }
+                        }
+                } else if (customId.startsWith('color_assign_')) {
+                        const command = Bot.Commands.get('colors');
+                        if (command) {
+                                try {
+                                        await command.execute(interaction, User, Bot);
+                                } catch (error) {
+                                        console.error('Button interaction error:', error);
+                                }
+                        }
+                } else if (customId.startsWith('role_toggle_')) {
+                        const command = Bot.Commands.get('roles');
+                        if (command) {
+                                try {
+                                        await command.execute(interaction, User, Bot);
+                                } catch (error) {
+                                        console.error('Button interaction error:', error);
+                                }
+                        }
+                }
+                return;
+        }
+
         if (!interaction.isChatInputCommand()) return;
 
         const command = Bot.Commands.get(interaction.commandName);

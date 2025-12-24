@@ -1,3 +1,5 @@
+// MOVABLE: 9kFun bot - Roulette gambling game
+// This command will be moved to a separate 9kFun bot in the future
 import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
@@ -9,9 +11,10 @@ const RouletteNumbers = {
 
 export default {
     name: 'roulette',
+    // MOVABLE: 9kFun bot - This gambling game will move to separate bot
     data: new SlashCommandBuilder()
         .setName('roulette')
-        .setDescription('Play roulette and bet your cash on numbers or colors'),
+        .setDescription('Play roulette and bet your cash on numbers or colors (🎮 Fun command - may move to 9kFun bot)'),
     aliases: ['!9k Roulette', '!9k Play Roulette', '!9k Spin'],
     execute(interaction, User, Bot) {
         const author = interaction.author || interaction.user;

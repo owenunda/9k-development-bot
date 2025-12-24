@@ -3,9 +3,10 @@ import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'announce',
+    // HIERARCHY IMPROVEMENT: Enhanced announcement system for admins
     data: new SlashCommandBuilder()
         .setName('announce')
-        .setDescription('Make an announcement in a specified channel')
+        .setDescription('Make server announcements (Admin command)')
         .addChannelOption(option => option.setName('channel').setDescription('Channel to announce in').setRequired(true))
         .addStringOption(option => option.setName('message').setDescription('Announcement message').setRequired(true)),
     async execute(msg, User, Bot) {

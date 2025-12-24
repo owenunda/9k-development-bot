@@ -1,3 +1,5 @@
+// MOVABLE: 9kFun bot - Work/random event system
+// This command will be moved to a separate 9kFun bot in the future
 import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
@@ -52,9 +54,10 @@ const BasicWork = [
 
 export default {
     name: 'work',
+    // MOVABLE: 9kFun bot - This work/event system will move to separate bot
     data: new SlashCommandBuilder()
         .setName('work')
-        .setDescription('Work a random job to earn cash'),
+        .setDescription('Work a random job to earn cash (🎮 Fun command - may move to 9kFun bot)'),
     aliases: ['!9k Work'],
     execute(msg, User, Bot) {
         const isInteraction = msg.commandName !== undefined;

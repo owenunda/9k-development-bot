@@ -1,11 +1,14 @@
+// MOVABLE: 9kFun bot - Music system (already limited to specific servers)
+// This command will be moved to a separate 9kFun bot in the future
 import { CreateEmbed } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'play',
+    // MOVABLE: 9kFun bot - This music system will move to separate bot
     data: new SlashCommandBuilder()
         .setName('play')
-        .setDescription('Play music in voice channel (Limited servers)')
+        .setDescription('Play music in voice channel (Limited servers) (🎮 Fun command - may move to 9kFun bot)')
         .addStringOption(option =>
             option.setName('query')
                 .setDescription('Song or video to search for')

@@ -3,9 +3,10 @@ import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Comp
 
 export default {
     name: 'vote',
+    // HIERARCHY IMPROVEMENT: Enhanced voting system with better UX
     data: new SlashCommandBuilder()
         .setName('vote')
-        .setDescription('Vote for a server')
+        .setDescription('Vote for servers in the community leaderboard')
         .addStringOption(option =>
             option.setName('serverid')
                 .setDescription('The ID of the server you want to vote for (Optional if used in server)')

@@ -1,11 +1,14 @@
+// MOVABLE: 9kFun bot - Number guessing game
+// This command will be moved to a separate 9kFun bot in the future
 import { CreateEmbed, SearchString } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'guess',
+    // MOVABLE: 9kFun bot - This guessing game will move to separate bot
     data: new SlashCommandBuilder()
         .setName('guess')
-        .setDescription('Guess the number game - win cash if you guess correctly'),
+        .setDescription('Guess the number game - win cash if you guess correctly (🎮 Fun command - may move to 9kFun bot)'),
     aliases: ['!9k guess', '!9k random number', '!9k number guess', '!9k number game'],
     execute(msg, User, Bot) {
         const isInteraction = msg.commandName !== undefined;

@@ -1,3 +1,5 @@
+// MOVABLE: 9kFun bot - Code redemption system
+// This command will be moved to a separate 9kFun bot in the future
 import { CreateEmbed } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
@@ -5,9 +7,10 @@ const usedcodes = [];
 
 export default {
     name: 'redeem',
+    // MOVABLE: 9kFun bot - This reward system will move to separate bot
     data: new SlashCommandBuilder()
         .setName('redeem')
-        .setDescription('Redeem a code for cash rewards')
+        .setDescription('Redeem a code for cash rewards (🎮 Fun command - may move to 9kFun bot)')
         .addStringOption(option =>
             option.setName('code')
                 .setDescription('The code to redeem')

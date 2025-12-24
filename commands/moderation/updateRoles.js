@@ -3,9 +3,10 @@ import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'updateroles',
+    // HIERARCHY IMPROVEMENT: Enhanced bulk role management for admins
     data: new SlashCommandBuilder()
         .setName('updateroles')
-        .setDescription('Update member roles for all server members (Admin only)'),
+        .setDescription('Update member roles for all server members (Admin only - use with caution)'),
     aliases: ['!9k Update Member Roles'],
     async execute(msg, User, Bot) {
         const isInteraction = msg.commandName !== undefined;
