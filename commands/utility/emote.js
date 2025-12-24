@@ -3,9 +3,10 @@ import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'emote',
+    // HIERARCHY IMPROVEMENT: Enhanced emoji information system
     data: new SlashCommandBuilder()
         .setName('emote')
-        .setDescription('Get information about an emoji by reacting to the message'),
+        .setDescription('Get detailed information about an emoji by reacting to the message'),
     aliases: ['!9k Emote'],
     async execute(msg, User, Bot) {
         const isInteraction = msg.commandName !== undefined;

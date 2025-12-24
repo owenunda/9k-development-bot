@@ -3,12 +3,13 @@ import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'serverinvite',
+    // HIERARCHY IMPROVEMENT: Enhanced server registration system
     data: new SlashCommandBuilder()
         .setName('serverinvite')
-        .setDescription('Register your server in the 9k bot list')
+        .setDescription('Register your server in the 9k bot community leaderboard')
         .addStringOption(option =>
             option.setName('invite')
-                .setDescription('The discord invite link')
+                .setDescription('The discord invite link for your server')
                 .setRequired(true)),
     aliases: ['!9k Server Invite', '!9k invite server', '/serverinvite'],
     async execute(msg, User, Bot) {

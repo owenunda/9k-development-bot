@@ -3,9 +3,10 @@ import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'servers',
+    // HIERARCHY IMPROVEMENT: Enhanced server leaderboard command
     data: new SlashCommandBuilder()
         .setName('servers')
-        .setDescription('List the top servers on the leaderboard'),
+        .setDescription('View the server leaderboard and community rankings'),
     aliases: ['!9k Servers', '!9k Servers List', '!9k Leaderboard', '!9k Server List', '/servers'],
     async execute(msg, User, Bot) {
         const isInteraction = msg.commandName !== undefined;

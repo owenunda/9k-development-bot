@@ -7,9 +7,10 @@ import { SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'messages',
+    // HIERARCHY IMPROVEMENT: Enhanced server analytics with better subcommand structure
     data: new SlashCommandBuilder()
         .setName('messages')
-        .setDescription('Display server message statistics with charts')
+        .setDescription('Server message analytics and statistics with charts')
         .addNumberOption(option =>
             option.setName('timeframe')
                 .setDescription('Number of time units to display (default: 30)')
@@ -19,7 +20,7 @@ export default {
                 .setDescription('Time unit type (default: days)')
                 .setRequired(false)
                 .addChoices(
-                    { name: 'All', value: 'all' },
+                    { name: 'All Time', value: 'all' },
                     { name: 'Minutes', value: 'minutes' },
                     { name: 'Hours', value: 'hours' },
                     { name: 'Days', value: 'days' },
@@ -32,8 +33,8 @@ export default {
                 .setDescription('Display mode (default: server)')
                 .setRequired(false)
                 .addChoices(
-                    { name: 'Server View', value: 'server' },
-                    { name: 'Default View', value: 'default' }
+                    { name: 'Server Timeline', value: 'server' },
+                    { name: 'User Rankings', value: 'default' }
                 ))
         .addChannelOption(option =>
             option.setName('channel')

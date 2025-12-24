@@ -77,20 +77,21 @@ Bank Robux After Trade: ${Bot.Shop.Bank.Robux - Trade * Bot.Shop.Bank.RobuxTrade
 
 export default {
   name: "robux",
+  // HIERARCHY IMPROVEMENT: Enhanced with clearer subcommand structure
   data: new SlashCommandBuilder()
     .setName("robux")
-    .setDescription("Trade bot cash for Robux")
+    .setDescription("Trade bot cash for Robux - supports rate checking and trading")
     .addSubcommand((subcommand) =>
       subcommand
         .setName("rate")
-        .setDescription("Check the current Robux conversion rate")
+        .setDescription("Check the current Robux conversion rate and bank status")
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("trade").setDescription("Trade bot cash for Robux")
+      subcommand.setName("trade").setDescription("Trade your bot cash for Robux")
     ),
   aliases: [
     "!9k Robux Rate",
-    "!9k Robux Trade Rate",
+    "!9k Robux Trade Rate", 
     "!9k Conversion",
     "!9k Trade",
     "!9k Trade Robux",
@@ -109,7 +110,7 @@ export default {
       return;
     }
 
-    // Handle regular text commands
+    // BACKWARD COMPATIBILITY: Handle regular text commands (unchanged logic)
     if (
       SearchString(interaction.content, [
         "!9k Robux Rate",

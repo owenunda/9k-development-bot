@@ -133,17 +133,21 @@ function BuyShopItem(msg, user, Bot) {
 
 export default {
     name: 'shop',
+    // HIERARCHY IMPROVEMENT: Enhanced shop command with explicit subcommands
     data: new SlashCommandBuilder()
         .setName('shop')
-        .setDescription('Shop Items')
+        .setDescription('Server shop system - view items and make purchases')
         .addSubcommand((subcommand) =>
-            subcommand.setName("buy").setDescription("Buy an item from the shop")
+            subcommand.setName("list").setDescription("View all available shop items")
+        )
+        .addSubcommand((subcommand) =>
+            subcommand.setName("buy").setDescription("Purchase an item from the shop")
         ),
     aliases: ['!9k Buy', '!9k Purchase', '!9k Shop', '!9k List Shop', '!9k items'],
     execute(interaction, User, Bot) {
         // Check if it's a slash command interaction
         if (interaction.commandName) {
-            // Slash command
+            // HIERARCHY: Route slash subcommands
             let subcommand = null;
             try {
                 subcommand = interaction.options.getSubcommand();
@@ -159,7 +163,7 @@ export default {
                 ListShopItems(interaction, Bot);
             }
         } else {
-            // Text command
+            // BACKWARD COMPATIBILITY: Text command routing (unchanged logic)
             const msg = interaction;
             if (SearchString(msg.content, ['!9k Buy', '!9k Purchase'])) {
                 BuyShopItem(msg, User, Bot);

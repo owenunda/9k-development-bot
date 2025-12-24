@@ -3,9 +3,10 @@ import { EmbedBuilder, SlashCommandBuilder } from 'discord.js';
 
 export default {
     name: 'save',
+    // HIERARCHY IMPROVEMENT: Enhanced admin data management
     data: new SlashCommandBuilder()
         .setName('save')
-        .setDescription('Force save bot data (Admin only)'),
+        .setDescription('Force save bot data to database (Admin only)'),
     aliases: ['!9k ForceSave'],
     async execute(msg, User, Bot) {
         const isInteraction = msg.commandName !== undefined;

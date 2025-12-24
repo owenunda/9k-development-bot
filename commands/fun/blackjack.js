@@ -1,3 +1,5 @@
+// MOVABLE: 9kFun bot - Blackjack gambling game
+// This command will be moved to a separate 9kFun bot in the future
 import { CreateEmbed, SearchString, SetCoolDown, AlertCoolDown, CheckCoolDown } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
@@ -163,9 +165,10 @@ Total: ${BlackJackHandTotal(Game.Cards.House)}
 
 export default {
     name: 'blackjack',
+    // MOVABLE: 9kFun bot - This gambling command will move to separate bot
     data: new SlashCommandBuilder()
         .setName('blackjack')
-        .setDescription('Play blackjack and bet your cash'),
+        .setDescription('Play blackjack and bet your cash (🎮 Fun command - may move to 9kFun bot)'),
     aliases: ['!9k bj', '!9k black'],
     execute(msg, User, Bot) {
         const isInteraction = msg.commandName !== undefined;

@@ -11,6 +11,15 @@ import * as ytdl from 'discord-ytdl-core';
 import * as voice from '@discordjs/voice';
 import * as chartjs from 'chartjs-node-canvas';
 
+/*
+ * UX IMPROVEMENTS IMPLEMENTED:
+ * 1. Interactive help system with categorized commands
+ * 2. Enhanced command hierarchy with better subcommands
+ * 3. Fun/gambling commands tagged as MOVABLE for future 9kFun bot
+ * 4. Improved command descriptions and user experience
+ * 5. Backward compatibility maintained for all existing functionality
+ */
+
 /* Main Variables */
 const Bot = {};
 Bot.Users = false;

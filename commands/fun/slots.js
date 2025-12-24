@@ -1,3 +1,5 @@
+// MOVABLE: 9kFun bot - Slot machine gambling game
+// This command will be moved to a separate 9kFun bot in the future
 import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
@@ -10,9 +12,10 @@ const Emojis = [
 
 export default {
     name: 'slots',
+    // MOVABLE: 9kFun bot - This gambling game will move to separate bot
     data: new SlashCommandBuilder()
         .setName('slots')
-        .setDescription('Play the slot machine and bet your cash'),
+        .setDescription('Play the slot machine and bet your cash (🎮 Fun command - may move to 9kFun bot)'),
     aliases: ['!9k Slots', '!9k Play Slots'],
     execute(msg, User, Bot) {
         const isInteraction = msg.commandName !== undefined;
