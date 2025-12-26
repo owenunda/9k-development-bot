@@ -368,7 +368,7 @@ export function GetUserDailyData(userid, Bot) {
     return new Promise((resolve, reject) => {
         const connection = ConnectDB(Bot);
         connection.query(
-            `SELECT last_daily_claim, daily_streak, daily_claims FROM BotUsers WHERE userid = '${userid}'`,
+            `SELECT last_daily_claim, daily_streak FROM BotUsers WHERE userid = '${userid}'`,
             function (error, results, fields) {
                 connection.end();
                 if (error) {
@@ -393,8 +393,7 @@ export function SaveUserDaily(User, dailyData, Bot) {
     const query = `UPDATE BotUsers 
                    SET cash = ${User.cash}, 
                        last_daily_claim = NOW(), 
-                       daily_streak = ${dailyData.streak}, 
-                       daily_claims = ${dailyData.claims} 
+                       daily_streak = ${dailyData.streak} 
                    WHERE userid = ${User.userid}`;
     
     connection.query(query, function (error, results, fields) {
