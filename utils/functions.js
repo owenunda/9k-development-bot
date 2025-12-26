@@ -361,3 +361,45 @@ export function CheckMonthlyReset(Bot) {
         }
     }
 }
+
+/* Daily Reward System Functions */
+
+export function GetUserDailyData(userid, Bot) {
+    return new Promise((resolve, reject) => {
+        const connection = ConnectDB(Bot);
+        connection.query(
+            `SELECT last_daily_claim, daily_streak, daily_claims FROM BotUsers WHERE userid = '${userid}'`,
+            function (error, results, fields) {
+                connection.end();
+                if (error) {
+                    console.error('GetUserDailyData Error:', error);
+                    resolve(null);
+                } else {
+                    resolve(results.length > 0 ? results[0] : null);
+                }
+            }
+        );
+    });
+}
+
+export function SaveUserDaily(User, dailyData, Bot) {
+    if (!User || !User.userid) {
+        console.error('SaveUserDaily Error: Invalid user object');
+        return;
+    }
+    const connection = ConnectDB(Bot);
+    connection.connect();
+    
+    const query = `UPDATE BotUsers 
+                   SET cash = ${User.cash}, 
+                       last_daily_claim = NOW(), 
+                       daily_streak = ${dailyData.streak}, 
+                       daily_claims = ${dailyData.claims} 
+                   WHERE userid = ${User.userid}`;
+    
+    connection.query(query, function (error, results, fields) {
+        if (error) console.error('SaveUserDaily Error:', error);
+    });
+    connection.on('error', function (err) { console.error('Db Error:', err); });
+    connection.end();
+}
