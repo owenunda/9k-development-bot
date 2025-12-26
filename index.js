@@ -104,9 +104,9 @@ for (const folder of commandFolders) {
 
 /* Init */
 ReturnDB('BotUsers', Bot).then(function (value) { Bot.Users = value });
-ReturnDB('BotUsers', Bot).then(function (value) { Bot.Users = value });
+//ReturnDB('BotUsers', Bot).then(function (value) { Bot.Users = value });
 ReturnDB('BotServers', Bot).then(function (value) { Bot.Servers = value });
-ReturnDB('Messages', Bot).then(function (value) { Bot.ServerMessages = value });
+//ReturnDB('Messages', Bot).then(function (value) { Bot.ServerMessages = value });
 
 Bot.Client.once(Events.ClientReady, readyClient => {
         console.log(`Ready! Logged in as ${readyClient.user.tag}`);
@@ -122,14 +122,14 @@ Bot.Client.on('messageCreate', msg => {
                 User = {};
                 User.userid = msg.author.id;
                 User.exp = 0;
-                User.messages = 0;
+               // User.messages = 0;
                 User.cash = 0;
                 User.websiteuser = null;
                 Bot.Users.push(User);
                 AddUser(User.userid, Bot);
         }
         User = GetUser(msg.author.id, Bot);
-        User.messages += 1;
+        //User.messages += 1;
         if (msg.author.bot) { return }
 
         const Entry = {};
@@ -180,7 +180,7 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                         User = {};
                         User.userid = interaction.user.id;
                         User.exp = 0;
-                        User.messages = 0;
+                        //User.messages = 0;
                         User.cash = 0;
                         User.websiteuser = null;
                         Bot.Users.push(User);
@@ -244,7 +244,7 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                         User = {};
                         User.userid = interaction.user.id;
                         User.exp = 0;
-                        User.messages = 0;
+                      //  User.messages = 0;
                         User.cash = 0;
                         User.websiteuser = null;
                         Bot.Users.push(User);

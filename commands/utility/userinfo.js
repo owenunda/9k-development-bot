@@ -48,34 +48,34 @@ export default {
         }
         
         const Embed = structuredClone(Bot.Embed);
-        let servermessages = 0;
+       // let servermessages = 0;
         
         if (targetMember && targetUser) {
             // Show info for mentioned/selected user
-            Bot.ServerMessages.forEach(function (Message) {
+        /*    Bot.ServerMessages.forEach(function (Message) {
                 if (Message.serverid == msg.guild.id && Message.userid == targetUser.userid) {
                     servermessages += 1;
                 }
             });
-            
+            */
             // HIERARCHY: Different views based on selection
             if (viewType === 'stats') {
                 Embed.Title = '📊 User Stats: ' + targetMember.user.username;
-                Embed.Description = `**📈 Message Analytics**
+                Embed.Description = /*`**📈 Message Analytics**
 Server Messages: ${servermessages}
 Total Messages: ${targetUser.messages}
 Messages Ratio: ${servermessages > 0 ? ((servermessages / targetUser.messages) * 100).toFixed(1) : 0}%
-
+*/`
 **💰 Economy Status**
 Current Balance: ${targetUser.cash}
 Website User: ${targetUser.websiteuser || 'Not linked'}`;
             } else {
                 Embed.Title = '👤 User Profile: ' + targetMember.user.username;
                 Embed.Description = `**💰 Balance:** ${targetUser.cash}
-
-**📊 Activity**
+`
+/***📊 Activity**
 Total Messages: ${targetUser.messages}
-Server Messages: ${servermessages}`;
+Server Messages: ${servermessages}`;*/
             }
             Embed.Image = targetMember.user.avatarURL();
         } else {
@@ -84,30 +84,30 @@ Server Messages: ${servermessages}`;
             const authorUsername = isInteraction ? msg.user.username : msg.author.username;
             const authorAvatar = isInteraction ? msg.user.avatarURL() : msg.author.avatarURL();
             
-            Bot.ServerMessages.forEach(function (Message) {
+          /*  Bot.ServerMessages.forEach(function (Message) {
                 if (Message.serverid == msg.guild.id && Message.userid == User.userid) {
                     servermessages += 1;
                 }
-            });
+            });*/
             
             // HIERARCHY: Different views for self
             if (viewType === 'stats') {
                 Embed.Title = '📊 Your Stats: ' + authorUsername;
-                Embed.Description = `**📈 Message Analytics**
+                Embed.Description = /*`**📈 Message Analytics**
 Server Messages: ${servermessages}
 Total Messages: ${User.messages}
 Messages Ratio: ${servermessages > 0 ? ((servermessages / User.messages) * 100).toFixed(1) : 0}%
-
+*/`
 **💰 Economy Status**
 Current Balance: ${User.cash}
 Website User: ${User.websiteuser || 'Not linked'}`;
             } else {
                 Embed.Title = '👤 Your Profile: ' + authorUsername;
                 Embed.Description = `**💰 Balance:** ${User.cash}
-
+`/*
 **📊 Activity**
 Total Messages: ${User.messages}
-Server Messages: ${servermessages}`;
+Server Messages: ${servermessages}`;*/
             }
             Embed.Image = authorAvatar;
         }
