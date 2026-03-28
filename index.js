@@ -2,7 +2,8 @@
 import { Client, Events, GatewayIntentBits, EmbedBuilder, WebhookClient, Collection, GatewayDispatchEvents } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
-import  config  from './config.js';
+import config from './config.js';
+import logger from './utils/logger.js';
 import { GetUser, AddUser, SearchString, SaveBotUsers, ReturnDB, AlertCoolDown, SetCoolDown, CheckCoolDown, CheckMonthlyReset, GetActiveAntiSpam, ShouldShowAntiSpam, GetRandomQuestion, CreateEmbed } from './utils/functions.js';
 import * as mysql2 from 'mysql2';
 import * as canvas from 'canvas';
@@ -116,7 +117,7 @@ for (const folder of commandFolders) {
         for (const file of commandFiles) {
                 const command = await import(`./commands/${folder}/${file}`);
                 Bot.Commands.set(command.default.name, command.default);
-                console.log(`Loaded command: ${command.default.name}`);
+                logger.info(`Loaded command: ${command.default.name}`);
         }
 }
 
@@ -189,7 +190,7 @@ Bot.Client.on('raw', (d) => {
 });
 
 Bot.Client.once(Events.ClientReady, readyClient => {
-        console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+        logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
         Bot.Client.user.setPresence({ activity: { name: 'BotActivity', type: 'WATCHING' }, status: 'online' });
         // Initialize Riffy with bot's user ID
         Bot.Client.riffy.init(readyClient.user.id);
@@ -197,6 +198,9 @@ Bot.Client.once(Events.ClientReady, readyClient => {
         setInterval(function () { SaveBotUsers(Bot); CheckMonthlyReset(Bot); }, 5000000)
         // Restore active giveaways
         giveawayCommand.restoreActiveGiveaways(Bot.Client);
+
+        // Initialize Discord-to-Channel logging
+        logger.initDiscord(Bot.Client, '1487161342208245790');
 });
 
 Bot.Client.on('messageCreate', msg => {
@@ -268,12 +272,15 @@ Bot.Client.on('messageCreate', msg => {
 
         if (bestMatch && !cmdrunning) {
              // Roll for anti-spam before executing
-             if (ShouldShowAntiSpam()) {
-                 const challenge = GetRandomQuestion(Bot);
-                 activeAntiSpam.set(msg.author.id, challenge);
-                 return msg.reply(challenge.text);
+             try {
+                 bestMatch.execute(msg, User, Bot);
+             } catch (error) {
+                 logger.error({ 
+                     message: `Error executing prefix command: ${bestMatch.name}`, 
+                     stack: error.stack, 
+                     label: 'PrefixCommandExecute' 
+                 });
              }
-             bestMatch.execute(msg, User, Bot);
              cmdrunning = true;
         }
 
@@ -310,7 +317,7 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                                 try {
                                         await command.execute(interaction, User, Bot);
                                 } catch (error) {
-                                        console.error('Button interaction error:', error);
+                                        logger.error({ message: 'Button interaction error', stack: error.stack, label: 'ButtonInteraction' });
                                 }
                         }
                 } else if (customId.startsWith('color_assign_') || customId.startsWith('color_page_')) {
@@ -319,7 +326,7 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                                 try {
                                         await command.execute(interaction, User, Bot);
                                 } catch (error) {
-                                        console.error('Button interaction error:', error);
+                                        logger.error({ message: 'Button interaction error', stack: error.stack, label: 'ButtonInteraction' });
                                 }
                         }
                 } else if (customId.startsWith('role_toggle_')) {
@@ -328,7 +335,7 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                                 try {
                                         await command.execute(interaction, User, Bot);
                                 } catch (error) {
-                                        console.error('Button interaction error:', error);
+                                        logger.error({ message: 'Button interaction error', stack: error.stack, label: 'ButtonInteraction' });
                                 }
                         }
                 } else if (customId.startsWith('userinfo:')) {
@@ -337,7 +344,7 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                                 try {
                                         await command.execute(interaction, User, Bot);
                                 } catch (error) {
-                                        console.error('Button interaction error:', error);
+                                        logger.error({ message: 'Button interaction error', stack: error.stack, label: 'ButtonInteraction' });
                                 }
                         }
                 } else if (customId.startsWith('giveaway_entered_page_')) {
@@ -346,7 +353,7 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                                 try {
                                         await command.execute(interaction, User, Bot);
                                 } catch (error) {
-                                        console.error('Button interaction error:', error);
+                                        logger.error({ message: 'Button interaction error', stack: error.stack, label: 'ButtonInteraction' });
                                 }
                         }
                 }
@@ -358,7 +365,7 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
         const command = Bot.Commands.get(interaction.commandName);
 
         if (!command) {
-                console.error(`No command matching ${interaction.commandName} was found.`);
+                logger.warn(`No command matching ${interaction.commandName} was found.`);
                 try {
                         await interaction.reply({
                                 content: `Command "/${interaction.commandName}" is not loaded on the bot right now. Try restarting the bot.`,
@@ -402,7 +409,7 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                 // Execute the command
                 await command.execute(interaction, User, Bot);
         } catch (error) {
-                console.error(error);
+                logger.error({ message: `Error executing command /${interaction.commandName}`, stack: error.stack, label: 'CommandExecute' });
                 try {
                         if (interaction.replied || interaction.deferred) {
                                 await interaction.followUp({ content: 'There was an error while executing this command!', flags: 64 });
@@ -411,7 +418,7 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                         }
                 } catch (replyError) {
                         // Interaction already expired or failed, just log it
-                        console.error('Could not send error response:', replyError.message);
+                        logger.error({ message: 'Could not send error response', stack: replyError.stack, label: 'CommandReplyError' });
                 }
         }
 });
@@ -420,11 +427,11 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
 // Auto-enroll servers when bot joins
 Bot.Client.on('guildCreate', async guild => {
         const { AddServer } = await import('./utils/functions.js');
-        console.log(`Bot joined new server: ${guild.name} (${guild.id})`);
+        logger.info(`Bot joined new server: ${guild.name} (${guild.id})`);
         
         // Auto-register server without invite link
         AddServer(guild.id, '', Bot);
-        console.log(`Auto-enrolled server: ${guild.name} to voting system`);
+        logger.info(`Auto-enrolled server: ${guild.name} to voting system`);
 });
 
 Bot.Client.on('guildMemberAdd', async member => {
@@ -474,7 +481,7 @@ Bot.Client.on('messageReactionAdd', async (reaction, user) => {
                         }
                 }
         } catch (error) {
-                console.error('Error handling reaction add:', error);
+                logger.error({ message: 'Error handling reaction add', stack: error.stack, label: 'ReactionAdd' });
         }
 });
 
@@ -500,13 +507,18 @@ Bot.Client.on('messageReactionRemove', async (reaction, user) => {
                         }
                 }
         } catch (error) {
-                console.error('Error handling reaction remove:', error);
+                logger.error({ message: 'Error handling reaction remove', stack: error.stack, label: 'ReactionRemove' });
         }
 });
 
 // Log in to Discord with your client's token
 Bot.Client.login(Bot.Token);
 
+// Global Error Handlers
 process.on('unhandledRejection', error => {
-        console.error('Unhandled promise rejection:', error);
+        logger.error({ message: 'Unhandled promise rejection', stack: error.stack, label: 'UnhandledRejection' });
+});
+
+process.on('uncaughtException', error => {
+        logger.error({ message: 'Uncaught Exception', stack: error.stack, label: 'UncaughtException' });
 });

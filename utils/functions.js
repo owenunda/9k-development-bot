@@ -2,6 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import pkg from 'date-diff';
 import fs from 'fs';
 import path from 'path';
+import logger from './logger.js';
 const { default: DateDiff } = pkg;
 
 const cooldowns = new Map();
@@ -87,9 +88,9 @@ export function AddUser(id, Bot) {
     const connection = ConnectDB(Bot);
     connection.connect();
     connection.query("INSERT INTO `BotUsers` (`id`, `userid`, `messages`, `exp`, `cash`) VALUES (NULL, '" + id + "', '0', '0', '0');", function (error, results, fields) {
-        if (error) console.error('AddUser Error:', error);
+        if (error) logger.error({ message: 'AddUser Query Error', error, label: 'Database' });
     });
-    connection.on('error', function (err) { console.error('Db Error:', err); });
+    connection.on('error', function (err) { logger.error({ message: 'AddUser Connection Error', error: err, label: 'Database' }); });
     connection.end();
 }
 
@@ -97,9 +98,9 @@ export function AddServerMessageSQL(Entry, Bot) {
     const connection = ConnectDB(Bot);
     connection.connect();
     connection.query("INSERT INTO `Messages` (`id`, `serverid`, `userid`, `messageid`, `channelid`, `senton`)" + `VALUES (NULL, '${Entry.serverid}', '${Entry.userid}', '${Entry.messageid}', '${Entry.channelid}', '${Entry.senton}');`, function (error, results, fields) {
-        if (error) console.error('AddServerMessageSQL Error:', error);
+        if (error) logger.error({ message: 'AddServerMessageSQL Query Error', error, label: 'Database' });
     });
-    connection.on('error', function (err) { console.error('Db Error:', err); });
+    connection.on('error', function (err) { logger.error({ message: 'AddServerMessageSQL Connection Error', error: err, label: 'Database' }); });
     connection.end();
 }
 
@@ -115,7 +116,7 @@ export function SearchString(text, words) {
 
 export function SaveBotUsers(Bot) {
     const connection = ConnectDB(Bot);
-    connection.on('error', function (err) { console.error('Db Error:', err); });
+    connection.on('error', function (err) { logger.error({ message: 'SaveBotUsers Connection Error', error: err, label: 'Database' }); });
 
     const users = Array.isArray(Bot.Users) ? Bot.Users : [];
     users.forEach(function (value) {
@@ -129,7 +130,7 @@ export function SaveBotUsers(Bot) {
             'UPDATE BotUsers SET exp = ?, cash = ? WHERE userid = ?;',
             [exp, cash, value.userid],
             function (error, results) {
-                if (error) console.error('SaveBotUsers Error:', error);
+                if (error) logger.error({ message: 'SaveBotUsers Update Error', error, label: 'Database' });
             }
         );
     });
@@ -139,11 +140,11 @@ export function SaveBotUsers(Bot) {
 
 export function SaveUser(User, Bot) {
     if (!User || !User.userid) {
-        console.error('SaveUser Error: Invalid user object');
+        logger.error({ message: 'SaveUser Error: Invalid user object', label: 'Logic' });
         return;
     }
     const connection = ConnectDB(Bot);
-    connection.on('error', function (err) { console.error('Db Error:', err); });
+    connection.on('error', function (err) { logger.error({ message: 'SaveUser Connection Error', error: err, label: 'Database' }); });
 
     // Message counting is handled by another bot; do not overwrite `messages`.
     const exp = User.exp ?? 0;
@@ -153,7 +154,7 @@ export function SaveUser(User, Bot) {
         'UPDATE BotUsers SET exp = ?, cash = ? WHERE userid = ?;',
         [exp, cash, User.userid],
         function (error) {
-            if (error) console.error('SaveUser Error:', error);
+            if (error) logger.error({ message: 'SaveUser Update Error', error, label: 'Database' });
         }
     );
 
@@ -169,7 +170,7 @@ export function ConnectDB(Bot) {
         port: Bot.Admin.SQL.Port
     });
     connection.connect(function (err) {
-        if (err) console.error('Error connecting to DB:', err.code);
+        if (err) logger.error({ message: 'Error connecting to DB', error: err, label: 'Database' });
     });
     return connection;
 }
@@ -179,14 +180,14 @@ export function ReturnDB(DB, Bot) {
         const sconnection = ConnectDB(Bot);
         sconnection.query(`SELECT * FROM ${DB};`, function (error, results, fields) {
             if (error) {
-                console.error('ReturnDB Error:', error);
+                logger.error({ message: 'ReturnDB Query Error', error, label: 'Database' });
                 resolve([]);
                 return;
             }
             resolve(results);
         });
         sconnection.on('error', function (err) {
-            console.error('Db Error:', err);
+            logger.error({ message: 'ReturnDB Connection Error', error: err, label: 'Database' });
             resolve([]);
         });
         sconnection.end();
@@ -283,7 +284,7 @@ export async function CheckAdmin(msg) {
     
     // Admin Role 1: Super Administrador (Team9000)
     // using the existing role ID from previous version
-    if (CacheUser.roles.cache.has('1177742430716571678')) {
+    if (CacheUser.roles.cache.has('1088546112362782750')) {
         found = userId;
     }
     return found;
@@ -296,7 +297,7 @@ export async function CheckServerAdmin(msg, Bot) {
     
     // 1. Super Administrador (Team9000) always has access
     // This is based on the hardcoded developer role ID for security
-    if (member.roles.cache.has('1177742430716571678')) return true;
+    if (member.roles.cache.has('1088546112362782750')) return true;
     
     // 2. Bot-specific Admin role (Admin Role 2)
     // Tries to match !BotName-Admin (e.g., !9k-Admin, !9kAnalytics-Admin)
@@ -335,7 +336,7 @@ export function AddServer(serverid, link, Bot) {
     
     connection.query(`SELECT * FROM BotServers WHERE serverid = '${serverid}'`, function (error, results, fields) {
         if (error) {
-            console.error('AddServer Select Error:', error);
+            logger.error({ message: 'AddServer Select Error', error, label: 'Database' });
             connection.end();
             return;
         }
@@ -343,7 +344,7 @@ export function AddServer(serverid, link, Bot) {
         if (results.length > 0) {
             // Server exists, Update it
              connection.query(`UPDATE BotServers SET link = '${link}' WHERE serverid = '${serverid}'`, function(updateErr) {
-                 if (updateErr) console.error('AddServer Update Error:', updateErr);
+                 if (updateErr) logger.error({ message: 'AddServer Update Error', error: updateErr, label: 'Database' });
                  
                  // Update Cache
                  if (Bot.Servers) {
@@ -355,7 +356,7 @@ export function AddServer(serverid, link, Bot) {
         } else {
             // Server does not exist, Insert it
             connection.query(`INSERT INTO BotServers (id, serverid, link, points) VALUES (NULL, '${serverid}', '${link}', 0)`, function (insertErr) {
-                if (insertErr) console.error('AddServer Insert Error:', insertErr);
+                if (insertErr) logger.error({ message: 'AddServer Insert Error', error: insertErr, label: 'Database' });
                 else {
                     // Update Cache
                     if (Bot.Servers) {
@@ -372,7 +373,7 @@ export function UpdateServerPoints(serverid, points, Bot) {
     const connection = ConnectDB(Bot);
     connection.connect();
     connection.query(`UPDATE BotServers SET points = points + (${points}) WHERE serverid = '${serverid}'`, function (error, results, fields) {
-        if (error) console.error('UpdateServerPoints Error:', error);
+        if (error) logger.error({ message: 'UpdateServerPoints Error', error, label: 'Database' });
     });
     connection.end();
     
@@ -390,7 +391,7 @@ export function GetPromoUser(userid, Bot) {
         connection.query(`SELECT * FROM PromoUsers WHERE userid = '${userid}'`, function (error, results, fields) {
             connection.end();
             if (error) {
-                console.error('GetPromoUser Error:', error);
+                logger.error({ message: 'GetPromoUser Error', error, label: 'Database' });
                 resolve(false);
             } else {
                 resolve(results.length > 0 ? results[0] : false);
@@ -403,7 +404,7 @@ export function AddPromoUser(userid, serverid, Bot) {
     const connection = ConnectDB(Bot);
     connection.connect();
     connection.query(`INSERT INTO PromoUsers (id, userid, serverid) VALUES (NULL, '${userid}', '${serverid}')`, function (error, results, fields) {
-        if (error) console.error('AddPromoUser Error:', error);
+        if (error) logger.error({ message: 'AddPromoUser Error', error, label: 'Database' });
     });
     connection.end();
 }
@@ -413,7 +414,7 @@ export function UpdatePromoUserVote(userid, oldServerId, newServerId, Bot) {
     connection.connect();
     
     connection.query(`UPDATE PromoUsers SET serverid = '${newServerId}' WHERE userid = '${userid}'`, function (error, results, fields) {
-        if (error) console.error('UpdatePromoUserVote Error:', error);
+        if (error) logger.error({ message: 'UpdatePromoUserVote Error', error, label: 'Database' });
     });
     
     connection.end();
@@ -473,18 +474,18 @@ export function ResetMonthlyStats(Bot) {
                     username: '9k Bot Service',
                     embeds: [embed]
                 });
-                console.log(`Monthly winner announced: ${ServerName} with ${winner.points} points`);
+                logger.info(`Monthly winner announced: ${ServerName} with ${winner.points} points`);
             } catch (error) {
-                console.error("Error announcing winner:", error);
+                logger.error({ message: 'Error announcing winner', error, label: 'Logic' });
             }
         }
     }
     
     // Reset points to 0 for all servers (keep servers registered)
     connection.query('UPDATE BotServers SET points = 0', (err) => {
-        if(err) console.error("Reset Error BotServers", err);
+        if(err) logger.error({ message: "Reset Error BotServers", error: err, label: 'Database' });
         else {
-            console.log("Monthly reset: All server points reset to 0");
+            logger.info("Monthly reset: All server points reset to 0");
             // Update cache
             if (Bot.Servers) {
                 Bot.Servers.forEach(server => {
@@ -496,8 +497,8 @@ export function ResetMonthlyStats(Bot) {
     
     // Clear vote history (users can vote again)
     connection.query('TRUNCATE TABLE PromoUsers', (err) => {
-        if (err) console.error("Reset Error PromoUsers", err);
-        else console.log("Monthly reset: Vote history cleared");
+        if (err) logger.error({ message: "Reset Error PromoUsers", error: err, label: 'Database' });
+        else logger.info("Monthly reset: Vote history cleared");
     });
     
     connection.end();
@@ -507,7 +508,7 @@ export function CheckMonthlyReset(Bot) {
     const Now = new Date();
     if (Now.getDate() === 1) {
         if (!Bot.LastReset || Bot.LastReset.getMonth() !== Now.getMonth()) {
-            console.log("Performing Monthly Reset...");
+            logger.info("Performing Monthly Reset...");
             ResetMonthlyStats(Bot);
             Bot.LastReset = Now;
         }
@@ -524,7 +525,7 @@ export function GetUserDailyData(userid, Bot) {
             function (error, results, fields) {
                 connection.end();
                 if (error) {
-                    console.error('GetUserDailyData Error:', error);
+                    logger.error({ message: 'GetUserDailyData Error', error, label: 'Database' });
                     resolve(null);
                 } else {
                     resolve(results.length > 0 ? results[0] : null);
@@ -536,7 +537,7 @@ export function GetUserDailyData(userid, Bot) {
 
 export function SaveUserDaily(User, dailyData, Bot) {
     if (!User || !User.userid) {
-        console.error('SaveUserDaily Error: Invalid user object');
+        logger.error({ message: 'SaveUserDaily Error: Invalid user object', label: 'Logic' });
         return;
     }
     const connection = ConnectDB(Bot);
@@ -549,9 +550,9 @@ export function SaveUserDaily(User, dailyData, Bot) {
                    WHERE userid = ${User.userid}`;
     
     connection.query(query, function (error, results, fields) {
-        if (error) console.error('SaveUserDaily Error:', error);
+        if (error) logger.error({ message: 'SaveUserDaily Error', error, label: 'Database' });
     });
-    connection.on('error', function (err) { console.error('Db Error:', err); });
+    connection.on('error', function (err) { logger.error({ message: 'SaveUserDaily Connection Error', error: err, label: 'Database' }); });
     connection.end();
 }
 
@@ -565,7 +566,7 @@ export function GetShopItems(Bot) {
             function (error, results, fields) {
                 connection.end();
                 if (error) {
-                    console.error('GetShopItems Error:', error);
+                    logger.error({ message: 'GetShopItems Error', error, label: 'Database' });
                     resolve([]);
                 } else {
                     resolve(results || []);
@@ -584,7 +585,7 @@ export function GetShopItemById(itemId, Bot) {
             function (error, results, fields) {
                 connection.end();
                 if (error) {
-                    console.error('GetShopItemById Error:', error);
+                    logger.error({ message: 'GetShopItemById Error', error, label: 'Database' });
                     resolve(null);
                 } else {
                     resolve(results.length > 0 ? results[0] : null);
@@ -615,7 +616,7 @@ export function AddShopItem(itemData, Bot) {
             function (error, results, fields) {
                 connection.end();
                 if (error) {
-                    console.error('AddShopItem Error:', error);
+                    logger.error({ message: 'AddShopItem Error', error, label: 'Database' });
                     reject(error);
                 } else {
                     resolve({
@@ -627,7 +628,7 @@ export function AddShopItem(itemData, Bot) {
         );
         
         connection.on('error', function (err) {
-            console.error('Db Error:', err);
+            logger.error({ message: 'AddShopItem Connection Error', error: err, label: 'Database' });
             reject(err);
         });
     });
@@ -643,7 +644,7 @@ export function UpdateShopStock(itemId, newStock, Bot) {
         connection.query(query, [newStock, itemId], function (error, results, fields) {
             connection.end();
             if (error) {
-                console.error('UpdateShopStock Error:', error);
+                logger.error({ message: 'UpdateShopStock Error', error, label: 'Database' });
                 reject(error);
             } else {
                 resolve({
@@ -654,7 +655,7 @@ export function UpdateShopStock(itemId, newStock, Bot) {
         });
         
         connection.on('error', function (err) {
-            console.error('Db Error:', err);
+            logger.error({ message: 'UpdateShopStock Connection Error', error: err, label: 'Database' });
             reject(err);
         });
     });
@@ -670,7 +671,7 @@ export function DecrementShopStock(itemId, Bot) {
         connection.query(query, [itemId], function (error, results, fields) {
             connection.end();
             if (error) {
-                console.error('DecrementShopStock Error:', error);
+                logger.error({ message: 'DecrementShopStock Error', error, label: 'Database' });
                 reject(error);
             } else {
                 resolve({
@@ -680,7 +681,7 @@ export function DecrementShopStock(itemId, Bot) {
         });
         
         connection.on('error', function (err) {
-            console.error('Db Error:', err);
+            logger.error({ message: 'DecrementShopStock Connection Error', error: err, label: 'Database' });
             reject(err);
         });
     });
@@ -694,7 +695,7 @@ export function GetAllShopItems(Bot) {
             function (error, results, fields) {
                 connection.end();
                 if (error) {
-                    console.error('GetAllShopItems Error:', error);
+                    logger.error({ message: 'GetAllShopItems Error', error, label: 'Database' });
                     resolve([]);
                 } else {
                     resolve(results || []);
@@ -714,7 +715,7 @@ export function DeleteShopItem(itemId, Bot) {
         connection.query(query, [itemId], function (error, results, fields) {
             connection.end();
             if (error) {
-                console.error('DeleteShopItem Error:', error);
+                logger.error({ message: 'DeleteShopItem Error', error, label: 'Database' });
                 reject(error);
             } else {
                 resolve({
@@ -724,7 +725,7 @@ export function DeleteShopItem(itemId, Bot) {
         });
         
         connection.on('error', function (err) {
-            console.error('Db Error:', err);
+            logger.error({ message: 'DeleteShopItem Connection Error', error: err, label: 'Database' });
             reject(err);
         });
     });
@@ -756,7 +757,7 @@ export function GetRandomQuestion(Bot) {
             answer: answer.toLowerCase()
         };
     } catch (error) {
-        console.error('Error generating anti-spam question:', error);
+        logger.error({ message: 'Error generating anti-spam question', error, label: 'Logic' });
         return {
             text: "**Anti-Spam Control!** Please type: **'9k'**",
             answer: '9k'
