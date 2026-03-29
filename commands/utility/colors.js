@@ -1,5 +1,6 @@
 import { CreateEmbed, SearchString } from '../../utils/functions.js';
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 // Configuration
 const BUTTONS_PER_ROW = 4;
@@ -135,7 +136,7 @@ async function showColorMenu(msg, Bot, page = 0) {
         
         // Ensure we don't exceed Discord's limit of 5 rows
         if (rows.length > MAX_ROWS) {
-            console.error(`Too many component rows: ${rows.length}. Limiting to ${MAX_ROWS}`);
+            logger.warn(`Too many component rows: ${rows.length}. Limiting to ${MAX_ROWS}`);
             rows.splice(MAX_ROWS);
         }
         
@@ -155,7 +156,7 @@ async function showColorMenu(msg, Bot, page = 0) {
         return msg.channel.send({ embeds: [CreateEmbed(Embed)], components: rows });
         
     } catch (error) {
-        console.error('Error showing color menu:', error);
+        logger.error({ message: 'Error showing color menu', error, label: 'Utility' });
         const ErrorEmbed = structuredClone(Bot.Embed);
         ErrorEmbed.Color = 15548997;
         ErrorEmbed.Title = '❌ Error';
@@ -265,7 +266,7 @@ async function assignColorRole(msg, Bot, roleId) {
         return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
         
     } catch (error) {
-        console.error('Error assigning color role:', error);
+        logger.error({ message: 'Error assigning color role', error, label: 'Utility' });
         const ErrorEmbed = structuredClone(Bot.Embed);
         ErrorEmbed.Color = 15548997;
         ErrorEmbed.Title = '❌ Error';

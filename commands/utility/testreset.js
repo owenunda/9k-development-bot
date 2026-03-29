@@ -1,5 +1,6 @@
 import { ResetMonthlyStats, CheckAdmin } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 export default {
     name: 'testreset',
@@ -29,6 +30,6 @@ export default {
         // Call the reset function
         ResetMonthlyStats(Bot);
         
-        console.log('Manual reset triggered by user:', userId);
+        logger.info(`Manual reset triggered by user: ${userId}`);
     }
 }

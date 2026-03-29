@@ -1,5 +1,6 @@
 import { CreateEmbed } from '../../utils/functions.js';
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 export default {
     name: 'clear',
@@ -96,7 +97,7 @@ export default {
             setTimeout(() => msg.deleteReply().catch(() => {}), 5000);
 
         } catch (err) {
-            console.error('Clear Error:', err);
+            logger.error({ message: 'Clear Error', error: err, label: 'Moderation' });
             const Embed = structuredClone(Bot.Embed);
             Embed.Title = '❌ Error';
             Embed.Description = 'An error occurred while trying to delete the messages.';

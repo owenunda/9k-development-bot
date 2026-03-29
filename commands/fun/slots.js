@@ -2,6 +2,7 @@
 // This command will be moved to a separate 9kFun bot in the future
 import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 const Emojis = [
     '🍊', '🍊', '🍆', '🍆', '🍇', '🍇', '🍅', '🍓', '🍓', '💀', '🐰', '🐰', '🐰', '🐰',
@@ -56,7 +57,7 @@ export default {
                         let Prize = 0;
 
                         const BettingOdds = Math.floor(25 - (Bet / 5));
-                        console.log('User Betting: ' + Bet.toString() + ' Odds Of Winning: ' + BettingOdds.toString());
+                        logger.info(`User Betting: ${Bet.toString()} Odds Of Winning: ${BettingOdds.toString()}`);
                         UserRoll.one = Emojis[Math.floor(Math.random() * Emojis.length)];
                         UserRoll.two = Emojis[Math.floor(Math.random() * Emojis.length)];
                         UserRoll.three = Emojis[Math.floor(Math.random() * Emojis.length)];

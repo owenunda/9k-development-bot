@@ -444,7 +444,7 @@ Bot.Client.on('guildMemberAdd', async member => {
         }
         try {
                 await member.roles.add(role);
-        } catch (error) { console.log(error) }
+        } catch (error) { logger.error({ message: 'Error adding Memeber role', error, label: 'Event: guildMemberAdd' }); }
 });
 
 // Giveaway reaction listener

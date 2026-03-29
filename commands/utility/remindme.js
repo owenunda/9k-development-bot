@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { EmbedBuilder } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 export default {
     name: 'remindme',
@@ -36,7 +37,7 @@ export default {
             try {
                 await interaction.channel.send({ content: `<@${interaction.user.id}>`, embeds: [reminderEmbed] });
             } catch (error) {
-                console.error('Error sending reminder:', error);
+                logger.error({ message: 'Error sending reminder', error, label: 'Utility' });
             }
         }, timeMs);
     }

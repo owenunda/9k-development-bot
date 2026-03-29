@@ -3,6 +3,7 @@ import config from './config.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import logger from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,7 +34,7 @@ for (const folder of commandFolders) {
     }
 }
 
-console.log(`\\n Found ${commands.length} slash command(s) to deploy.\\n`);
+logger.info(`Found ${commands.length} slash command(s) to deploy.`);
 
 // Construct and prepare an instance of the REST module
 const rest = new REST().setToken(config.token);
@@ -44,36 +45,8 @@ const isProduction = env === 'production' || env === 'prod';
 // and deploy your commands!
 (async () => {
     try {
-        console.log(`🔄 Started refreshing ${commands.length} application (/) commands.`);
-
-        let data;
-        if (isProduction) {
-            console.log('  Environment = production → deploying GLOBAL slash commands.');
-            data = await rest.put(
-                Routes.applicationCommands(config.clientId),
-                { body: commands }
-            );
-        } else {
-            if (!config.guildId) {
-                throw new Error('config.guildId is required when environment is development.');
-            }
-            console.log(`  Environment = development → deploying GUILD slash commands to ${config.guildId}.`);
-            data = await rest.put(
-                Routes.applicationGuildCommands(config.clientId, config.guildId),
-                { body: commands }
-            );
-        }
-
-        console.log(`  Successfully reloaded ${data.length} application (/) commands.`);
+        logger.info(`Successfully reloaded ${data.length} application (/) commands.`);
     } catch (error) {
-        // And of course, make sure you catch and log any errors!
-        console.error(' Error deploying commands:');
-        if (error.code === 20012) {
-            console.error('  Authorization error: Make sure the token and clientId in config.js match the same bot.');
-        } else if (error.code === 50035) {
-            console.error('  Invalid clientId: Check that config.clientId is set correctly.');
-        } else {
-            console.error(error);
-        }
+        logger.error({ message: 'Error deploying commands', error, label: 'Deployment' });
     }
 })();

@@ -517,6 +517,24 @@ export function CheckMonthlyReset(Bot) {
 
 /* Daily Reward System Functions */
 
+export async function GetDailyTiers(Bot) {
+    return new Promise((resolve, reject) => {
+        const connection = ConnectDB(Bot);
+        connection.query(
+            'SELECT * FROM BotDailyTiers ORDER BY required_days ASC',
+            function (error, results, fields) {
+                connection.end();
+                if (error) {
+                    logger.error({ message: 'GetDailyTiers Error', error, label: 'Database' });
+                    resolve([]);
+                } else {
+                    resolve(results || []);
+                }
+            }
+        );
+    });
+}
+
 export function GetUserDailyData(userid, Bot) {
     return new Promise((resolve, reject) => {
         const connection = ConnectDB(Bot);

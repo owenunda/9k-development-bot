@@ -1,5 +1,6 @@
 import { CreateEmbed } from '../../utils/functions.js';
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 export default {
     name: 'kick',
@@ -108,7 +109,7 @@ export default {
 
             await msg.reply({ embeds: [FinalEmbed] });
         } catch (err) {
-            console.error('Kick Error:', err);
+            logger.error({ message: 'Kick Error', error: err, label: 'Moderation' });
             const Embed = structuredClone(Bot.Embed);
             Embed.Title = 'Error';
             Embed.Description = 'An error occurred while trying to kick the user.';

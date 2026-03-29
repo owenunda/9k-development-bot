@@ -1,5 +1,6 @@
 import { CreateEmbed } from '../../utils/functions.js';
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 export default {
     name: 'unban',
@@ -86,7 +87,7 @@ export default {
 
             await msg.reply({ embeds: [FinalEmbed] });
         } catch (err) {
-            console.error('Unban Error:', err);
+            logger.error({ message: 'Unban Error', error: err, label: 'Moderation' });
             const Embed = structuredClone(Bot.Embed);
             Embed.Title = 'Error';
             Embed.Description = 'An error occurred while trying to unban the user.';

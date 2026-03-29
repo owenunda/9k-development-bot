@@ -1,73 +1,47 @@
-import { CreateEmbed, GetUserDailyData, SaveUserDaily } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
+import logger from '../../utils/logger.js';
 
-// Daily Rewards Configuration - Easy to modify
-// Formula: Total reward = basePoints + streak days
-const DailyRewards = {
-    Tier1: {
-        name: 'Beginner',
-        minDays: 1,
-        maxDays: 30,
-        basePoints: 10,  // Base points for this tier
-        rewards: [
-            { type: 'cash', chance: 100 }
-        ]
-    },
-    Tier2: {
-        name: 'Dedicated',
-        minDays: 31,
-        maxDays: null, // No maximum
-        basePoints: 30,  // Base points for this tier
-        rewards: [
-            { type: 'cash', chance: 100 }
-        ]
+// Get tier based on racha days from dynamic tiers array
+function getTierByStreak(streak, tiers) {
+    if (!tiers || tiers.length === 0) {
+        // Fallback safety (Beginner values)
+        return { name: 'Beginner', points: 10, required_days: 0 };
     }
-};
-
-// Get tier based on streak days
-function getTierByStreak(streak) {
-    const tiers = Object.values(DailyRewards);
     
-    for (const tier of tiers) {
-        if (streak >= tier.minDays && (tier.maxDays === null || streak <= tier.maxDays)) {
+    // Sort DESC to find the highest qualifying tier (e.g. 100, then 50, then 31, then 0)
+    const sortedTiers = [...tiers].sort((a, b) => b.required_days - a.required_days);
+    
+    for (const tier of sortedTiers) {
+        if (streak >= tier.required_days) {
             return tier;
         }
     }
     
-    return DailyRewards.Tier1; // Default to Tier1
+    return tiers[0];
 }
 
 // Calculate next tier info
-function getNextTierInfo(currentTier, streak) {
-    const tiers = Object.values(DailyRewards);
-    const currentIndex = tiers.findIndex(t => t.name === currentTier.name);
+function getNextTierInfo(streak, tiers) {
+    if (!tiers || tiers.length === 0) return null;
     
-    if (currentIndex === -1 || currentIndex === tiers.length - 1) {
-        return null; // No next tier
-    }
+    // Sort ASC to find the next threshold
+    const sortedTiers = [...tiers].sort((a, b) => a.required_days - b.required_days);
+    const nextTier = sortedTiers.find(t => t.required_days > streak);
     
-    const nextTier = tiers[currentIndex + 1];
+    if (!nextTier) return null;
+    
     return {
         name: nextTier.name,
-        daysUntilNext: nextTier.minDays - streak
+        daysUntilNext: nextTier.required_days - streak
     };
 }
 
 // Process rewards and return total cash
-// Formula: totalCash = tier.basePoints + streak days
+// Formula: totalCash = tier.points + streak bonus
 function processRewards(tier, streak) {
-    let totalCash = 0;
-    const rewardMessages = [];
-    
-    for (const reward of tier.rewards) {
-        if (reward.type === 'cash') {
-            // Calculate: base points + streak days
-            const cashAmount = tier.basePoints + streak;
-            totalCash += cashAmount;
-            rewardMessages.push(`+${cashAmount} cash (${tier.basePoints} base + ${streak} streak)`);
-        }
-        // Future: Add other reward types here (roles, backgrounds, etc.)
-    }
+    // Original formula: base points + streak days as bonus
+    const totalCash = (tier.points || 0) + streak;
+    const rewardMessages = [`+${totalCash} cash (${tier.points} base + ${streak} streak)`];
     
     return { totalCash, rewardMessages };
 }
@@ -94,8 +68,11 @@ export default {
         const channel = msg.channel;
 
         try {
-            // Get daily data from database
-            const dailyData = await GetUserDailyData(userId, Bot);
+            // Get daily data and tiers from database
+            const [dailyData, tiers] = await Promise.all([
+                GetUserDailyData(userId, Bot),
+                GetDailyTiers(Bot)
+            ]);
             
             if (!dailyData) {
                 throw new Error('Could not retrieve daily data from database');
@@ -111,9 +88,9 @@ export default {
             // First time claiming
             if (!lastClaim) {
                 currentStreak = 1;
-                const tier = getTierByStreak(currentStreak);
+                const tier = getTierByStreak(currentStreak, tiers);
                 const { totalCash, rewardMessages } = processRewards(tier, currentStreak);
-                const nextTierInfo = getNextTierInfo(tier, currentStreak);
+                const nextTierInfo = getNextTierInfo(currentStreak, tiers);
                 
                 User.cash += totalCash;
                 
@@ -149,7 +126,7 @@ export default {
                 const totalMinutesLeft = Math.ceil(msLeft / (1000 * 60));
                 const hoursLeft = Math.floor(totalMinutesLeft / 60);
                 const minutesLeft = totalMinutesLeft % 60;
-                const tier = getTierByStreak(currentStreak);
+                const tier = getTierByStreak(currentStreak, tiers);
                 
                 Embed.Color = 15548997; // Red
                 Embed.Title = 'Daily Reward on Cooldown';
@@ -167,10 +144,10 @@ export default {
             if (dayDiff === 1) {
                 const oldStreak = currentStreak;
                 currentStreak += 1;
-                const oldTier = getTierByStreak(oldStreak);
-                const newTier = getTierByStreak(currentStreak);
+                const oldTier = getTierByStreak(oldStreak, tiers);
+                const newTier = getTierByStreak(currentStreak, tiers);
                 const { totalCash, rewardMessages } = processRewards(newTier, currentStreak);
-                const nextTierInfo = getNextTierInfo(newTier, currentStreak);
+                const nextTierInfo = getNextTierInfo(currentStreak, tiers);
                 
                 User.cash += totalCash;
                 
@@ -207,9 +184,9 @@ export default {
             // Missed at least one day - reset streak
             if (dayDiff >= 2) {
                 currentStreak = 1;
-                const tier = getTierByStreak(currentStreak);
+                const tier = getTierByStreak(currentStreak, tiers);
                 const { totalCash, rewardMessages } = processRewards(tier, currentStreak);
-                const nextTierInfo = getNextTierInfo(tier, currentStreak);
+                const nextTierInfo = getNextTierInfo(currentStreak, tiers);
                 
                 User.cash += totalCash;
                 
@@ -237,7 +214,7 @@ export default {
             }
             
         } catch (error) {
-            console.error('Daily command error:', error);
+            logger.error({ message: 'Daily command error', error, label: 'Economy' });
             
             const ErrorEmbed = structuredClone(Bot.Embed);
             ErrorEmbed.Color = 15548997; // Red

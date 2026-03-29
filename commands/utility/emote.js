@@ -1,5 +1,6 @@
 import { CreateEmbed, CheckServerAdmin } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 export default {
     name: 'emote',
@@ -71,6 +72,6 @@ Url:${emoji.url}
             return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
         });
 
-        collector.on('end', () => { console.log('done collecting emojis') })
+        collector.on('end', () => { logger.info('Emoji collection completed'); });
     }
 }

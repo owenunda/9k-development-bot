@@ -1,5 +1,6 @@
-import { AddServer, CheckAdmin } from '../../utils/functions.js';
+import { CheckAdmin, AddServer } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 export default {
     name: 'enrollall',
@@ -36,7 +37,7 @@ export default {
                 // Enroll server without link
                 AddServer(guild.id, '', Bot);
                 enrolled++;
-                console.log(`Enrolled: ${guild.name} (${guild.id})`);
+                logger.info(`Enrolled: ${guild.name} (${guild.id})`);
             } else {
                 alreadyEnrolled++;
             }
@@ -53,6 +54,6 @@ export default {
             msg.reply(resultMsg);
         }
         
-        console.log(`Enrollment completed by user ${userId}: ${enrolled} new, ${alreadyEnrolled} existing`);
+        logger.info(`Enrollment completed by user ${userId}: ${enrolled} new, ${alreadyEnrolled} existing`);
     }
 }

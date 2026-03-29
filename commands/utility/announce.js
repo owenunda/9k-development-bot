@@ -1,5 +1,6 @@
 import { CreateEmbed, CheckServerAdmin } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 export default {
     name: 'announce',
@@ -68,7 +69,7 @@ export default {
             }
             return msg.channel.send({ embeds: [CreateEmbed(Embed)] });
         } catch (error) {
-            console.error(error);
+            logger.error({ message: 'Announce command error', error, label: 'Utility' });
             const Embed = structuredClone(Bot.Embed);
             Embed.Title = "Error";
             Embed.Description = "Failed to send announcement. Please check my permissions.";

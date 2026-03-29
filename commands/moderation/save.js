@@ -1,5 +1,6 @@
 import { CheckAdmin, SaveBotUsers } from '../../utils/functions.js';
 import { EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 export default {
     name: 'save',
@@ -14,7 +15,7 @@ export default {
         
         CheckAdmin(msg).then(async IsAdmin => {
             const userId = isInteraction ? msg.user.id : msg.author.id;
-            console.log(IsAdmin);
+            logger.info(`Save command check: ${IsAdmin}`);
             if (IsAdmin == userId) { }
             else {
                 return;
@@ -25,7 +26,7 @@ export default {
                 .setDescription("Dont spam this or daddy 9k will get mad.")
                 .setThumbnail('https://9000inc.com/Resources/9000INCLogoV2.png');
             SaveBotUsers(Bot);
-            console.log('forcesaving');
+            logger.info('Force saving database');
             
             if (isInteraction) {
                 await msg.reply({ embeds: [reply] });
@@ -34,7 +35,7 @@ export default {
             }
             
             setTimeout(function () {
-                console.log(IsAdmin);
+                logger.info(`Save loop admin check: ${IsAdmin}`);
             }, 3000);
         })
     }

@@ -1,5 +1,6 @@
 import { CreateEmbed } from '../../utils/functions.js';
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 // Max timeout Discord allows: 28 days in ms
 const MAX_TIMEOUT_MS = 28 * 24 * 60 * 60 * 1000;
@@ -133,13 +134,8 @@ export default {
 
             await msg.reply({ embeds: [FinalEmbed] });
         } catch (err) {
-            console.error('Timeout Error:', err);
-            const Embed = structuredClone(Bot.Embed);
-            Embed.Title = 'Error';
-            Embed.Description = 'An error occurred while trying to timeout the user.';
-            Embed.Thumbnail = false;
-            Embed.Image = false;
-            await msg.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
+            logger.error({ message: 'Timeout Error', error: err, label: 'Moderation' });
+            return await msg.reply({ content: `❌ Error: ${err.message}`, ephemeral: true });
         }
     }
 }

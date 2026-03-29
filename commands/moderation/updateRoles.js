@@ -1,5 +1,6 @@
 import { CreateEmbed, CheckAdmin, delay } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 export default {
     name: 'updateroles',
@@ -59,9 +60,9 @@ export default {
                         try {
                             await member.roles.add(role);
                             addedCount++;
-                            console.log(`✅ Added role to ${member.user.tag}`);
+                            logger.info(`✅ Added role to ${member.user.tag}`);
                         } catch (err) {
-                            console.error(`❌ Failed to add role to ${member.user.tag}: ${err.message}`);
+                            logger.error({ message: `Failed to add role to ${member.user.tag}`, error: err, label: 'Moderation' });
                         }
 
                         // Wait 9 seconds before the next request

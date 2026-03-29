@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import Giveaway from '../../database/models/Giveaway.js';
 import { CheckServerAdmin } from '../../utils/functions.js';
+import logger from '../../utils/logger.js';
 
 // Maximum safe setTimeout delay (about 24.8 days)
 const MAX_TIMEOUT = 2147483647;
@@ -67,13 +68,13 @@ async function restoreActiveGiveaways(client) {
               }, remainingTime, giveaway.messageId);
               restored++;
             }
-          } catch (err) {
-            console.error(`Failed to restore giveaway ${giveaway.messageId}:`, err.message);
-          }
+            } catch (err) {
+              logger.error({ message: `Failed to restore giveaway ${giveaway.messageId}`, error: err, label: 'Giveaway' });
+            }
         }
       }
 
-      console.log(`Giveaways: Restored ${restored} active, ${expiredGiveaways.length} expired to process`);
+      logger.info(`Giveaways: Restored ${restored} active, ${expiredGiveaways.length} expired to process`);
 
       // Process expired giveaways in background with delays to not block event loop
       for (const giveaway of expiredGiveaways) {
@@ -84,17 +85,17 @@ async function restoreActiveGiveaways(client) {
             ended++;
           }
         } catch (err) {
-          console.error(`Failed to end expired giveaway ${giveaway.messageId}:`, err.message);
+          logger.error({ message: `Failed to end expired giveaway ${giveaway.messageId}`, error: err, label: 'Giveaway' });
         }
         // Small delay between processing expired giveaways to not block
         await new Promise(resolve => setTimeout(resolve, 100));
       }
 
       if (ended > 0) {
-        console.log(`Giveaways: Ended ${ended} expired giveaways`);
+        logger.info(`Giveaways: Ended ${ended} expired giveaways`);
       }
     } catch (error) {
-      console.error('Error restoring giveaways:', error);
+      logger.error({ message: 'Error restoring giveaways', error, label: 'Giveaway' });
     }
   });
 }
@@ -360,7 +361,7 @@ async function startGiveaway(interaction) {
 
     await interaction.editReply(`✅ Giveaway **${title}** started! Ends <t:${Math.floor(endTime / 1000)}:R>`);
   } catch (error) {
-    console.error('Error starting giveaway:', error);
+    logger.error({ message: 'Error starting giveaway', error, label: 'Giveaway' });
     await interaction.editReply('Error starting giveaway.');
   }
 }
@@ -380,7 +381,7 @@ async function endGiveaway(interaction) {
     await endGiveawayById(messageId, interaction.guild, interaction);
     await interaction.editReply('Giveaway has been ended.');
   } catch (error) {
-    console.error('Error ending giveaway:', error);
+    logger.error({ message: 'Error ending giveaway', error, label: 'Giveaway' });
     await interaction.editReply('Error ending giveaway.');
   }
 }
@@ -404,7 +405,7 @@ async function cancelGiveaway(interaction) {
 
     await interaction.editReply('Giveaway has been canceled.');
   } catch (error) {
-    console.error('Error canceling giveaway:', error);
+    logger.error({ message: 'Error canceling giveaway', error, label: 'Giveaway' });
     await interaction.editReply('Error canceling giveaway.');
   }
 }
@@ -461,7 +462,7 @@ async function rerollGiveaway(interaction) {
 
     await interaction.editReply('Reroll completed! New winner(s) announced.');
   } catch (error) {
-    console.error('Error rerolling giveaway:', error);
+    logger.error({ message: 'Error rerolling giveaway', error, label: 'Giveaway' });
     await interaction.editReply('Error rerolling giveaway.');
   }
 }
@@ -601,7 +602,7 @@ async function showEnteredGiveaways(interaction, page = 0, targetUser = null) {
     await interaction.editReply({ embeds: [embed], components });
 
   } catch (error) {
-    console.error('Error showing entered giveaways:', error);
+    logger.error({ message: 'Error showing entered giveaways', error, label: 'Giveaway' });
     const errorMessage = 'Error retrieving your giveaway entries.';
     if (isButton) {
       await interaction.editReply({ content: errorMessage, embeds: [], components: [] });
@@ -650,7 +651,7 @@ async function resetUserEntries(interaction) {
     await interaction.editReply({ embeds: [embed] });
 
   } catch (error) {
-    console.error('Error resetting user entries:', error);
+    logger.error({ message: 'Error resetting user entries', error, label: 'Giveaway' });
     await interaction.editReply('Error resetting user giveaway entries.');
   }
 }
@@ -787,7 +788,7 @@ async function listGiveaways(interaction) {
     }
 
   } catch (error) {
-    console.error('Error listing giveaways:', error);
+    logger.error({ message: 'Error listing giveaways', error, label: 'Giveaway' });
     await interaction.editReply('Error listing giveaways.');
   }
 }
@@ -847,6 +848,7 @@ async function endGiveawayById(messageId, guild) {
     }
 
     const winnerMentions = winners.map(id => `<@${id}>`).join(', ');
+    const uniqueWinners = [...new Set(winners)];
 
     const winnerEmbed = new EmbedBuilder()
       .setTitle('GIVEAWAY ENDED')
@@ -863,7 +865,7 @@ async function endGiveawayById(messageId, guild) {
     await channel.send({ 
       content: `Congratulations ${winnerMentions} `,
       embeds: [winnerEmbed],
-      allowedMentions: { users: winners }
+      allowedMentions: { users: uniqueWinners }
     });
 
     // Update metadata with winners
@@ -873,6 +875,6 @@ async function endGiveawayById(messageId, guild) {
     giveaway.ended = true;
     await giveaway.save();
   } catch (error) {
-    console.error('Error in endGiveawayById:', error);
+    logger.error({ message: 'Error in endGiveawayById', error, label: 'Giveaway' });
   }
 }

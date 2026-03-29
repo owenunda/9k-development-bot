@@ -1,5 +1,6 @@
 import { CreateEmbed } from '../../utils/functions.js';
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import logger from '../../utils/logger.js';
 
 export default {
     name: 'ban',
@@ -119,7 +120,7 @@ export default {
 
             await msg.reply({ embeds: [FinalEmbed] });
         } catch (err) {
-            console.error('Ban Error:', err);
+            logger.error({ message: 'Ban Error', error: err, label: 'Moderation' });
             const Embed = structuredClone(Bot.Embed);
             Embed.Title = 'Error';
             Embed.Description = 'An error occurred while trying to ban the user.';
