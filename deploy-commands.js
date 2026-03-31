@@ -28,9 +28,8 @@ for (const folder of commandFolders) {
                 continue;
             }
             commands.push(command.default.data.toJSON());
-            console.log(` Loaded slash command: ${command.default.data.name}`);
+            console.log(` Loaded slash command: ${command.default.name || command.default.data.name}`);
         }
-        // Silently skip commands without 'data' (text-only commands)
     }
 }
 
@@ -45,8 +44,35 @@ const isProduction = env === 'production' || env === 'prod';
 // and deploy your commands!
 (async () => {
     try {
+        logger.info(`Started refreshing ${commands.length} application (/) commands (${isProduction ? 'GLOBAL' : 'GUILD'}).`);
+
+        let data;
+        if (isProduction) {
+            data = await rest.put(
+                Routes.applicationCommands(config.clientId),
+                { body: commands }
+            );
+        } else {
+            if (!config.guildId) {
+                throw new Error('config.guildId is required when environment is development.');
+            }
+            data = await rest.put(
+                Routes.applicationGuildCommands(config.clientId, config.guildId),
+                { body: commands }
+            );
+        }
+
         logger.info(`Successfully reloaded ${data.length} application (/) commands.`);
     } catch (error) {
-        logger.error({ message: 'Error deploying commands', error, label: 'Deployment' });
+        // Detailed error logging
+        logger.error({ 
+            message: `Error deploying commands: ${error.message}`, 
+            error, 
+            label: 'Deployment',
+            code: error.code,
+            status: error.status,
+            method: error.method,
+            url: error.url
+        });
     }
 })();
