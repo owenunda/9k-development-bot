@@ -25,6 +25,10 @@ export default {
         team: {
             id: 'YOUR_WEBHOOK_ID',
             token: 'YOUR_WEBHOOK_TOKEN'
+        },
+        errors_logs: {
+            id: 'YOUR_WEBHOOK_ID',
+            token: 'YOUR_WEBHOOK_TOKEN'
         }
     },
 
