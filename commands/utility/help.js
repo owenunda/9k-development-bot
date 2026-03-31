@@ -117,6 +117,7 @@ function buildCategoryEmbed(category, Bot, ctx) {
             Embed.Title = "ℹ️ Bot Information";
             Embed.Description = `**Bot Utilities**
 \`/invite\` - Get bot invite link
+\`/copy emoji\` - Copy emojis to your server
 \`/emote\` - Get emoji information
 \`/9ktube\` - YouTube extension info
 \`/remindme\` - Set a personal reminder
