@@ -356,6 +356,15 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                                         logger.error({ message: 'Button interaction error', stack: error.stack, label: 'ButtonInteraction' });
                                 }
                         }
+                } else if (customId.startsWith('copy_add_emoji_')) {
+                        const command = Bot.Commands.get('copy');
+                        if (command) {
+                                try {
+                                        await command.execute(interaction, User, Bot);
+                                } catch (error) {
+                                        logger.error({ message: 'Button interaction error', stack: error.stack, label: 'ButtonInteraction' });
+                                }
+                        }
                 }
                 return;
         }
