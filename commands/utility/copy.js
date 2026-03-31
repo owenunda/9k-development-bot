@@ -74,7 +74,7 @@ export default {
                     });
                     
                     const successEmbed = structuredClone(Bot.Embed);
-                    successEmbed.Title = '✅ Emoji Added!';
+                    successEmbed.Title = 'Emoji Added!';
                     successEmbed.Description = `${createdEmoji} The **${emojiName}** emoji was added successfully to your server!`;
                     successEmbed.Thumbnail = false;
                     successEmbed.Image = false;
@@ -86,7 +86,7 @@ export default {
                     logger.error({ message: 'Error adding emoji to server', error: error.message, stack: error.stack, label: 'CopyCommand' });
                     
                     const errorEmbed = structuredClone(Bot.Embed);
-                    errorEmbed.Title = '❌ Error';
+                    errorEmbed.Title = 'Error';
                     errorEmbed.Description = `Failed to add emoji. Make sure the emoji exists and I have permission to manage emojis.`;
                     errorEmbed.Thumbnail = false;
                     errorEmbed.Image = false;
@@ -109,7 +109,7 @@ export default {
             
             if (!match) {
                 const errorEmbed = structuredClone(Bot.Embed);
-                errorEmbed.Title = '❌ Invalid Emoji';
+                errorEmbed.Title = 'Invalid Emoji';
                 errorEmbed.Description = 'Please provide a valid Discord emoji in the format: `<:emoji_name:id>` or `<a:emoji_name:id>` for animated emojis.';
                 errorEmbed.Thumbnail = false;
                 errorEmbed.Image = false;
@@ -129,7 +129,7 @@ export default {
                 await axios.head(emojiUrl);
             } catch (error) {
                 const errorEmbed = structuredClone(Bot.Embed);
-                errorEmbed.Title = '❌ Emoji Not Found';
+                errorEmbed.Title = 'Emoji Not Found';
                 errorEmbed.Description = 'The emoji you provided could not be found or is no longer available.';
                 errorEmbed.Thumbnail = false;
                 errorEmbed.Image = false;
@@ -139,7 +139,7 @@ export default {
             
             // Create info embed
             const infoEmbed = structuredClone(Bot.Embed);
-            infoEmbed.Title = `📋 Emoji Information`;
+            infoEmbed.Title = `Emoji Information`;
             infoEmbed.Description = `Here's the emoji you want to copy:`;
             infoEmbed.Image = emojiUrl;
             
@@ -169,7 +169,7 @@ export default {
             logger.error({ message: 'Copy emoji command error', error: error.message, stack: error.stack, label: 'CopyCommand' });
             
             const errorEmbed = structuredClone(Bot.Embed);
-            errorEmbed.Title = '❌ Error';
+            errorEmbed.Title = 'Error';
             errorEmbed.Description = 'An unexpected error occurred while processing your emoji.';
             errorEmbed.Thumbnail = false;
             errorEmbed.Image = false;
