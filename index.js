@@ -64,19 +64,19 @@ Bot.WebHooks = {
         })
 };
 
-Bot.Shop = {};
-Bot.ServerMessages = [];
-Bot.Shop.Bank = {};
-Bot.Shop.Bank.BotCash = config.shop.bank.botCash;
-Bot.Shop.Bank.Robux = config.shop.bank.robux;
-Bot.Shop.Bank.RobuxTradeRate = config.shop.bank.robuxTradeRate;
-Bot.Shop.Items = config.shop.items.map(item => ({
-        Title: item.title,
-        Desc: item.desc,
-        Price: item.price,
-        LimitedStock: item.limitedStock,
-        Role: item.role
-}));
+// Bot.Shop = {};
+// Bot.ServerMessages = [];
+// Bot.Shop.Bank = {};
+// Bot.Shop.Bank.BotCash = config.shop.bank.botCash;
+// Bot.Shop.Bank.Robux = config.shop.bank.robux;
+// Bot.Shop.Bank.RobuxTradeRate = config.shop.bank.robuxTradeRate;
+// Bot.Shop.Items = config.shop.items.map(item => ({
+//         Title: item.title,
+//         Desc: item.desc,
+//         Price: item.price,
+//         LimitedStock: item.limitedStock,
+//         Role: item.role
+// }));
 
 Bot.Embed = {};
 Bot.Embed.Color = 5793266;

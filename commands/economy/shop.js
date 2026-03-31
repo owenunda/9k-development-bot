@@ -153,7 +153,6 @@ New balance: ${user.cash - item.price}`;
             try {
                 member.roles.add(role).then(() => {
                     user.cash += -item.price;
-                    Bot.Shop.Bank.BotCash += item.price;
                     
                     if (isInteraction) {
                         if (msg.deferred || msg.replied) return msg.editReply({ embeds: [CreateEmbed(Embed)] });
@@ -178,7 +177,6 @@ New balance: ${user.cash - item.price}`;
                 username: '9k Shop'
             }).then(() => {
                 user.cash += -item.price;
-                Bot.Shop.Bank.BotCash += item.price;
                 
                 if (isInteraction) {
                     if (msg.deferred || msg.replied) return msg.editReply({ embeds: [CreateEmbed(Embed)] });

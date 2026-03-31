@@ -157,7 +157,7 @@ export default {
 
         collector.on('collect', async interaction => {
             if (interaction.user.id !== userId) {
-                await interaction.reply({ content: 'This work panel belongs to another user.', ephemeral: true });
+                await interaction.reply({ content: 'This work panel belongs to another user.', flags: 64 });
                 return;
             }
 

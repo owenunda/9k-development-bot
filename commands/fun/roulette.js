@@ -1,7 +1,7 @@
 // MOVABLE: 9kFun bot - Roulette gambling game
 // This command will be moved to a separate 9kFun bot in the future
 import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown, GetRandomFunCooldown } from '../../utils/functions.js';
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
 
 const RouletteNumbers = {
     red: [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36],
@@ -35,27 +35,80 @@ export default {
             Embed.Title = ' Play Roulette?';
             Embed.Description = `Enter an amount of cash to bet! (Max ${maxbet})`;
 
+            const row1 = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId('bet_100')
+                    .setLabel('Bet 100')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(100 > maxbet || 100 > User.cash),
+                new ButtonBuilder()
+                    .setCustomId('bet_300')
+                    .setLabel('Bet 300')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(300 > maxbet || 300 > User.cash),
+                new ButtonBuilder()
+                    .setCustomId('bet_500')
+                    .setLabel('Bet 500')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(500 > maxbet || 500 > User.cash)
+            );
+
             const sendMessage = isInteraction
-                ? interaction.reply({ embeds: [CreateEmbed(Embed)], fetchReply: true })
-                : interaction.channel.send({ embeds: [CreateEmbed(Embed)] });
+                ? interaction.reply({ embeds: [CreateEmbed(Embed)], components: [row1], fetchReply: true })
+                : interaction.channel.send({ embeds: [CreateEmbed(Embed)], components: [row1] });
 
             sendMessage.then(Sent => {
-                const interaction_filter = response => { return response.author.id === author.id };
-                Sent.channel.awaitMessages({ filter: interaction_filter, max: 1 }).then((collected) => {
-                    const Bet = Math.floor(collected.first().content);
+                const interaction_filter = response => response.author.id === author.id;
+                const btn_filter = i => i.user.id === author.id;
+
+                const btnCollector = Sent.createMessageComponentCollector({ filter: btn_filter, componentType: ComponentType.Button, time: 30000, max: 1 });
+                const msgCollector = Sent.channel.createMessageCollector({ filter: interaction_filter, time: 30000, max: 1 });
+
+                let handleBet = (Bet, isInteractionReply = null) => {
+                    btnCollector.stop('resolved');
+                    msgCollector.stop('resolved');
+
                     if (User.cash >= Bet && Bet <= maxbet && Bet >= 1) {
+                        if (isInteractionReply) {
+                            isInteractionReply.deferUpdate().catch(() => {});
+                        }
+                        const disabledRow = new ActionRowBuilder().addComponents(
+                            row1.components.map(c => ButtonBuilder.from(c).setDisabled(true))
+                        );
+                        Sent.edit({ components: [disabledRow] }).catch(() => {});
+
                         const Embed2 = structuredClone(Bot.Embed);
                         Embed2.Title = ' Choose Your Bet ';
                         Embed2.Description = `**What do you want to bet on?**
                         
-**Type one of the following:**
-• A number (0-36)
-• "red" or "black"
-• "even" or "odd"
-• "low" (1-18) or "high" (19-36)`;
-                        interaction.channel.send({ embeds: [CreateEmbed(Embed2)] }).then(Sent2 => {
-                            Sent2.channel.awaitMessages({ filter: interaction_filter, max: 1 }).then((collected2) => {
-                                const choice = collected2.first().content.toLowerCase().trim();
+**Select an option below or type a number (0-36):**`;
+
+                        const rowRow2 = new ActionRowBuilder().addComponents(
+                            new ButtonBuilder().setCustomId('choice_red').setLabel('Red').setStyle(ButtonStyle.Danger),
+                            new ButtonBuilder().setCustomId('choice_black').setLabel('Black').setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder().setCustomId('choice_even').setLabel('Even').setStyle(ButtonStyle.Primary),
+                            new ButtonBuilder().setCustomId('choice_odd').setLabel('Odd').setStyle(ButtonStyle.Primary)
+                        );
+                        const rowRow3 = new ActionRowBuilder().addComponents(
+                            new ButtonBuilder().setCustomId('choice_low').setLabel('Low (1-18)').setStyle(ButtonStyle.Success),
+                            new ButtonBuilder().setCustomId('choice_high').setLabel('High (19-36)').setStyle(ButtonStyle.Success)
+                        );
+
+                        interaction.channel.send({ embeds: [CreateEmbed(Embed2)], components: [rowRow2, rowRow3] }).then(Sent2 => {
+                            const choiceBtnCollector = Sent2.createMessageComponentCollector({ filter: btn_filter, componentType: ComponentType.Button, time: 30000, max: 1 });
+                            const choiceMsgCollector = Sent2.channel.createMessageCollector({ filter: interaction_filter, time: 30000, max: 1 });
+
+                            let handleChoice = (choice, choiceInteraction = null) => {
+                                choiceBtnCollector.stop('resolved');
+                                choiceMsgCollector.stop('resolved');
+
+                                if (choiceInteraction) {
+                                    choiceInteraction.deferUpdate().catch(() => {});
+                                }
+
+                                const disabledRow2 = new ActionRowBuilder().addComponents(rowRow2.components.map(c => ButtonBuilder.from(c).setDisabled(true)));
+                                const disabledRow3 = new ActionRowBuilder().addComponents(rowRow3.components.map(c => ButtonBuilder.from(c).setDisabled(true)));
+                                Sent2.edit({ components: [disabledRow2, disabledRow3] }).catch(() => {});
 
                                 // Spin the wheel
                                 const winningNumber = Math.floor(Math.random() * 37); // 0-36
@@ -115,7 +168,7 @@ export default {
 
                                 // Get color emoji
                                 let colorEmoji = '🟢';
-                                if (winningColor === 'red') colorEmoji = '';
+                                if (winningColor === 'red') colorEmoji = '🔴';
                                 if (winningColor === 'black') colorEmoji = '⚫';
 
                                 // Create result embed
@@ -135,14 +188,37 @@ New Wallet Value: ${User.cash}`;
                                 ResultEmbed.Image = 'https://media.tenor.com/X6hWPXlAYGkAAAA1/roulette-game.webp';
 
                                 interaction.channel.send({ embeds: [CreateEmbed(ResultEmbed)] });
+                            };
+
+                            choiceBtnCollector.on('collect', i => {
+                                handleChoice(i.customId.split('_')[1], i);
+                            });
+
+                            choiceMsgCollector.on('collect', msg => {
+                                handleChoice(msg.content.toLowerCase().trim());
                             });
                         });
                     } else {
                         const Embed = structuredClone(Bot.Embed);
                         Embed.Title = 'Nope.';
                         Embed.Description = 'You dont have that much money or did not enter a valid number.';
-                        interaction.channel.send({ embeds: [CreateEmbed(Embed)] });
+                        if (isInteractionReply) {
+                            isInteractionReply.reply({ embeds: [CreateEmbed(Embed)], flags: 64 }).catch(() => {});
+                        } else {
+                            interaction.channel.send({ embeds: [CreateEmbed(Embed)] });
+                        }
                     }
+                };
+
+                btnCollector.on('collect', i => {
+                     handleBet(Math.floor(parseInt(i.customId.split('_')[1])), i);
+                });
+
+                msgCollector.on('collect', msg => {
+                     const val = Math.floor(msg.content);
+                     if (!isNaN(val)) {
+                         handleBet(val);
+                     }
                 });
             });
         });

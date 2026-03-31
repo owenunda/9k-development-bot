@@ -1,7 +1,7 @@
 // MOVABLE: 9kFun bot - Number guessing game
 // This command will be moved to a separate 9kFun bot in the future
 import { CreateEmbed, SearchString, SetCoolDown, AlertCoolDown, CheckCoolDown, GetRandomFunCooldown } from '../../utils/functions.js';
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
 
 export default {
     name: 'guess',
@@ -25,32 +25,48 @@ export default {
         Embed.Title = 'Number Guessing!';
         Embed.Description = `Select Your Difficulty (Easy, Medium, Hard, Insane)`;
         
+        const row = new ActionRowBuilder().addComponents(
+             new ButtonBuilder()
+                .setCustomId('dif_Easy')
+                .setLabel('Easy')
+                .setStyle(ButtonStyle.Success),
+             new ButtonBuilder()
+                .setCustomId('dif_Medium')
+                .setLabel('Medium')
+                .setStyle(ButtonStyle.Primary),
+             new ButtonBuilder()
+                .setCustomId('dif_Hard')
+                .setLabel('Hard')
+                .setStyle(ButtonStyle.Danger),
+             new ButtonBuilder()
+                .setCustomId('dif_Insane')
+                .setLabel('Insane')
+                .setStyle(ButtonStyle.Secondary)
+        );
+
         const sendMessage = isInteraction 
-            ? msg.reply({ embeds: [CreateEmbed(Embed)] })
-            : channel.send({ embeds: [CreateEmbed(Embed)] });
+            ? msg.reply({ embeds: [CreateEmbed(Embed)], components: [row], fetchReply: true })
+            : channel.send({ embeds: [CreateEmbed(Embed)], components: [row] });
         
         sendMessage.then(Sent => {
-            const msg_filter = response => { return response.author.id === userId };
-            channel.awaitMessages({ filter: msg_filter, max: 1 }).then((collected) => {
-                const res = collected.first().content;
-                let dif = 'Easy';
-                let rmax = 10;
-                if (SearchString(collected.first().content, ['Insane'])) {
-                    dif = 'Insane';
-                    rmax = 9000;
+            const msg_filter = response => response.author.id === userId;
+            const btn_filter = i => i.user.id === userId;
+            
+            const btnCollector = Sent.createMessageComponentCollector({ filter: btn_filter, componentType: ComponentType.Button, time: 30000, max: 1 });
+            const msgCollector = channel.createMessageCollector({ filter: msg_filter, time: 30000, max: 1 });
+
+            let handleDifficulty = (dif, rmax, isInteractionReply = null) => {
+                btnCollector.stop('resolved');
+                msgCollector.stop('resolved');
+                
+                if (isInteractionReply) {
+                    isInteractionReply.deferUpdate().catch(() => {});
                 }
-                else if (SearchString(collected.first().content, ['Hard'])) {
-                    dif = 'Hard';
-                    rmax = 100;
-                }
-                else if (SearchString(collected.first().content, ['Medium'])) {
-                    dif = 'Medium';
-                    rmax = 25;
-                }
-                else {
-                    dif = 'Easy';
-                    rmax = 10;
-                }
+                const disabledRow = new ActionRowBuilder().addComponents(
+                    row.components.map(c => ButtonBuilder.from(c).setDisabled(true))
+                );
+                Sent.edit({ components: [disabledRow] }).catch(() => {});
+
                 const Embed = structuredClone(Bot.Embed);
                 Embed.Title = `Number Guessing! [${dif}]`;
                 Embed.Description = `**Im thinking of a number between 1 and ${rmax}**
@@ -112,7 +128,35 @@ Skill Issue?
                         }
                     })
                 })
-            })
+            }
+
+            btnCollector.on('collect', i => {
+                let dif = i.customId.split('_')[1];
+                let rmax = 10;
+                if (dif === 'Insane') rmax = 9000;
+                if (dif === 'Hard') rmax = 100;
+                if (dif === 'Medium') rmax = 25;
+                handleDifficulty(dif, rmax, i);
+            });
+
+            msgCollector.on('collect', collected => {
+                let dif = 'Easy';
+                let rmax = 10;
+                if (SearchString(collected.content, ['Insane'])) {
+                    dif = 'Insane';
+                    rmax = 9000;
+                }
+                else if (SearchString(collected.content, ['Hard'])) {
+                    dif = 'Hard';
+                    rmax = 100;
+                }
+                else if (SearchString(collected.content, ['Medium'])) {
+                    dif = 'Medium';
+                    rmax = 25;
+                }
+                handleDifficulty(dif, rmax);
+            });
+
         })
     }
 }

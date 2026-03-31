@@ -1,7 +1,7 @@
 // MOVABLE: 9kFun bot - Slot machine gambling game
 // This command will be moved to a separate 9kFun bot in the future
 import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown, GetRandomFunCooldown } from '../../utils/functions.js';
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
 import logger from '../../utils/logger.js';
 
 const Emojis = [
@@ -13,7 +13,6 @@ const Emojis = [
 
 export default {
     name: 'slots',
-    // MOVABLE: 9kFun bot - This gambling game will move to separate bot
     data: new SlashCommandBuilder()
         .setName('slots')
         .setDescription('Play the slot machine and bet your cash (🎮 Fun command - may move to 9kFun bot)'),
@@ -41,20 +40,52 @@ export default {
             Embed.Title = 'Play Slots?';
             Embed.Description = `Enter a amount of cash to bet! (Max ${maxbet})`;
             
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId('bet_100')
+                    .setLabel('Bet 100')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(100 > maxbet || 100 > User.cash),
+                new ButtonBuilder()
+                    .setCustomId('bet_300')
+                    .setLabel('Bet 300')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(300 > maxbet || 300 > User.cash),
+                new ButtonBuilder()
+                    .setCustomId('bet_500')
+                    .setLabel('Bet 500')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(500 > maxbet || 500 > User.cash)
+            );
+
             const sendMessage = isInteraction 
-                ? msg.reply({ embeds: [CreateEmbed(Embed)] })
-                : channel.send({ embeds: [CreateEmbed(Embed)] });
+                ? msg.reply({ embeds: [CreateEmbed(Embed)], components: [row], fetchReply: true })
+                : channel.send({ embeds: [CreateEmbed(Embed)], components: [row] });
             
             sendMessage.then(Sent => {
                 const msg_filter = response => { return response.author.id === userId };
-                channel.awaitMessages({ filter: msg_filter, max: 1 }).then((collected) => {
-                    const Bet = Math.floor(collected.first().content);
+                const btn_filter = i => i.user.id === userId;
+                
+                const btnCollector = Sent.createMessageComponentCollector({ filter: btn_filter, componentType: ComponentType.Button, time: 30000, max: 1 });
+                const msgCollector = channel.createMessageCollector({ filter: msg_filter, time: 30000, max: 1 });
+
+                let handleBet = (Bet, isInteractionReply = null) => {
+                    btnCollector.stop('resolved');
+                    msgCollector.stop('resolved');
                     if (User.cash >= Bet && Bet <= maxbet && Bet >= 1) {
                         const UserRoll = {};
                         let TrippleBonus = false;
                         let JackPot = false;
                         let Winnings = 0;
                         let Prize = 0;
+
+                        if (isInteractionReply) {
+                            isInteractionReply.deferUpdate().catch(() => {});
+                        }
+                        const disabledRow = new ActionRowBuilder().addComponents(
+                            row.components.map(c => ButtonBuilder.from(c).setDisabled(true))
+                        );
+                        Sent.edit({ components: [disabledRow] }).catch(() => {});
 
                         const BettingOdds = Math.floor(25 - (Bet / 5));
                         UserRoll.one = Emojis[Math.floor(Math.random() * Emojis.length)];
@@ -126,10 +157,26 @@ New Wallet Value: ${User.cash}
                     else {
                         const Embed = structuredClone(Bot.Embed);
                         Embed.Title = 'Nope.';
-                        Embed.Description = 'You dont have that much money or did not enter a number stop being silly.';
-                        channel.send({ embeds: [CreateEmbed(Embed)] });
+                        Embed.Description = 'You dont have that much money or did not enter a valid number stop being silly.';
+                        if (isInteractionReply) {
+                            isInteractionReply.reply({ embeds: [CreateEmbed(Embed)], flags: 64 }).catch(() => {});
+                        } else {
+                            channel.send({ embeds: [CreateEmbed(Embed)] });
+                        }
                     }
-                })
+                };
+
+                btnCollector.on('collect', i => {
+                    const betAmount = parseInt(i.customId.split('_')[1]);
+                    handleBet(betAmount, i);
+                });
+
+                msgCollector.on('collect', collected => {
+                    const betAmount = Math.floor(collected.content);
+                    if (!isNaN(betAmount)) {
+                        handleBet(betAmount);
+                    }
+                });
             })
 
         })

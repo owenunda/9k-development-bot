@@ -1,7 +1,7 @@
 // MOVABLE: 9kFun bot - Blackjack gambling game
 // This command will be moved to a separate 9kFun bot in the future
 import { CreateEmbed, SearchString, SetCoolDown, AlertCoolDown, CheckCoolDown, GetRandomFunCooldown } from '../../utils/functions.js';
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
 
 const Cards = [
     'Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'King', 'Queen', 'Jack'
@@ -71,28 +71,63 @@ Total: ${BlackJackHandTotal(Game.Cards.User)}
 House: ${HandToEmoji(Game.Cards.House)}
 Total: ${BlackJackHandTotal(Game.Cards.House)}
 
-**Type A Command To Continue: Draw, Stand, Double Down (if you dont pick one of these ill stand for you cheers!)**`;
-        channel.send({ embeds: [CreateEmbed(Embed)] }).then(Sent => {
-            const msg_filter = response => { return response.author.id === userId };
-            channel.awaitMessages({ filter: msg_filter, max: 1 }).then((collected) => {
+**Select An Action Below:**`;
+
+        const row = new ActionRowBuilder().addComponents(
+             new ButtonBuilder()
+                .setCustomId('hit')
+                .setLabel('Draw (Hit)')
+                .setStyle(ButtonStyle.Primary),
+             new ButtonBuilder()
+                .setCustomId('stand')
+                .setLabel('Stand')
+                .setStyle(ButtonStyle.Secondary),
+             new ButtonBuilder()
+                .setCustomId('double')
+                .setLabel('Double Down')
+                .setStyle(ButtonStyle.Danger)
+                .setDisabled(User.cash < Game.Bet * 2 || Game.Cards.User.length > 2)
+        );
+
+        channel.send({ embeds: [CreateEmbed(Embed)], components: [row] }).then(Sent => {
+            const filter = i => i.user.id === userId;
+            const collector = Sent.createMessageComponentCollector({ filter, componentType: ComponentType.Button, time: 60000, max: 1 });
+            
+            collector.on('collect', i => {
                 let Choice = false;
-                if (SearchString(collected.first().content, ['Draw', 'Hit', 'Card', 'Deal'])) {
+                if (i.customId === 'hit') {
                     Choice = 'Draw';
                     BlackJackDrawCard(Game.Cards.User);
                     if (BlackJackHandTotal(Game.Cards.User) > 21) {
                         Choice = 'Bust';
                     }
-                }
-                if (SearchString(collected.first().content, ['Double'])) {
+                } else if (i.customId === 'double') {
                     Choice = 'Double Down';
-                }
-                if (Choice == false) {//cant find cmd then auto stand
+                } else if (i.customId === 'stand') {
                     Choice = 'Stand';
                 }
+                
                 Game.LastChoice = Choice;
+                
+                const disabledRow = new ActionRowBuilder().addComponents(
+                    row.components.map(c => ButtonBuilder.from(c).setDisabled(true))
+                );
+                i.update({ components: [disabledRow] }).catch(() => {});
+                
                 BlackJackLoop(Game, msg, User, Bot);
-            })
-        })
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    Game.LastChoice = 'Stand';
+                    const disabledRow = new ActionRowBuilder().addComponents(
+                        row.components.map(c => ButtonBuilder.from(c).setDisabled(true))
+                    );
+                    Sent.edit({ components: [disabledRow] }).catch(() => {});
+                    BlackJackLoop(Game, msg, User, Bot);
+                }
+            });
+        });
     }
     else {//Stand / Double Down / Bust
         if (Game.LastChoice == 'Bust') {
@@ -191,14 +226,38 @@ export default {
             Embed.Title = 'Play Blackjack?';
             Embed.Description = `Enter a amount of cash to bet! (Max ${maxbet})`;
             
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId('bet_100')
+                    .setLabel('Bet 100')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(100 > maxbet || 100 > User.cash),
+                new ButtonBuilder()
+                    .setCustomId('bet_300')
+                    .setLabel('Bet 300')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(300 > maxbet || 300 > User.cash),
+                new ButtonBuilder()
+                    .setCustomId('bet_500')
+                    .setLabel('Bet 500')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(500 > maxbet || 500 > User.cash)
+            );
+
             const sendMessage = isInteraction 
-                ? msg.reply({ embeds: [CreateEmbed(Embed)] })
-                : channel.send({ embeds: [CreateEmbed(Embed)] });
+                ? msg.reply({ embeds: [CreateEmbed(Embed)], components: [row], fetchReply: true })
+                : channel.send({ embeds: [CreateEmbed(Embed)], components: [row] });
             
             sendMessage.then(Sent => {
                 const msg_filter = response => { return response.author.id === userId };
-                channel.awaitMessages({ filter: msg_filter, max: 1 }).then((collected) => {
-                    const Bet = Math.floor(collected.first().content);
+                const btn_filter = i => i.user.id === userId;
+                
+                const btnCollector = Sent.createMessageComponentCollector({ filter: btn_filter, componentType: ComponentType.Button, time: 30000, max: 1 });
+                const msgCollector = channel.createMessageCollector({ filter: msg_filter, time: 30000, max: 1 });
+
+                let handleBet = (Bet, isInteractionReply = null) => {
+                    btnCollector.stop('resolved');
+                    msgCollector.stop('resolved');
                     if (User.cash >= Bet && Bet <= maxbet && Bet >= 1) {
                         const Game = {};
                         Game.Cards = {};
@@ -206,17 +265,42 @@ export default {
                         Game.Cards.House = [];
                         Game.LastChoice = false;
                         Game.Bet = Bet;
+                        if (isInteractionReply) {
+                            isInteractionReply.deferUpdate().catch(() => {});
+                        }
                         BlackJackDrawCard(Game.Cards.User);
                         BlackJackDrawCard(Game.Cards.House);
+                        
+                        const disabledRow = new ActionRowBuilder().addComponents(
+                            row.components.map(c => ButtonBuilder.from(c).setDisabled(true))
+                        );
+                        Sent.edit({ components: [disabledRow] }).catch(() => {});
+
                         BlackJackLoop(Game, msg, User, Bot);
                     }
                     else {//money issue
                         const Embed = structuredClone(Bot.Embed);
                         Embed.Title = 'Nope.';
-                        Embed.Description = 'You dont have that much money or did not enter a number stop being silly.';
-                        channel.send({ embeds: [CreateEmbed(Embed)] });
+                        Embed.Description = 'You dont have that much money or did not enter a valid number stop being silly.';
+                        if (isInteractionReply) {
+                            isInteractionReply.reply({ embeds: [CreateEmbed(Embed)], flags: 64 }).catch(() => {});
+                        } else {
+                            channel.send({ embeds: [CreateEmbed(Embed)] });
+                        }
                     }
-                })
+                };
+
+                btnCollector.on('collect', i => {
+                    const betAmount = parseInt(i.customId.split('_')[1]);
+                    handleBet(betAmount, i);
+                });
+
+                msgCollector.on('collect', collected => {
+                    const betAmount = Math.floor(collected.content);
+                    if (!isNaN(betAmount)) {
+                        handleBet(betAmount);
+                    }
+                });
             })
         })
     }
