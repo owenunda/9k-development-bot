@@ -1,6 +1,6 @@
 // MOVABLE: 9kFun bot - Blackjack gambling game
 // This command will be moved to a separate 9kFun bot in the future
-import { CreateEmbed, SearchString, SetCoolDown, AlertCoolDown, CheckCoolDown } from '../../utils/functions.js';
+import { CreateEmbed, SearchString, SetCoolDown, AlertCoolDown, CheckCoolDown, GetRandomFunCooldown } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
 const Cards = [
@@ -179,7 +179,7 @@ export default {
         if (CheckCoolDown(cooldownkey)) {
             return AlertCoolDown(msg, cooldownkey, Bot)
         }
-        SetCoolDown(msg, cooldownkey, 30000);
+        SetCoolDown(msg, cooldownkey, GetRandomFunCooldown());
 
         let maxbet = 100;
         msg.guild.members.fetch(userId).then(MemberCache => {

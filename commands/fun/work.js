@@ -1,10 +1,8 @@
 // MOVABLE: 9kFun bot - Work/random event system
 // This command will be moved to a separate 9kFun bot in the future
-import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown } from '../../utils/functions.js';
+import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown, GetRandomFunCooldown } from '../../utils/functions.js';
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
 
-const WORK_COOLDOWN_MIN_MS = 14000;
-const WORK_COOLDOWN_MAX_MS = 17000;
 const WORK_BUTTON_TIMEOUT_MS = 30000;
 
 const BasicWork = [
@@ -71,10 +69,6 @@ const JobChoices = {
     }
 };
 
-function randomWorkCooldownMs() {
-    return Math.floor(Math.random() * (WORK_COOLDOWN_MAX_MS - WORK_COOLDOWN_MIN_MS + 1)) + WORK_COOLDOWN_MIN_MS;
-}
-
 function resolveTone(job) {
     if (job.Tone === 4) {
         return Math.floor(Math.random() * 3) + 1;
@@ -133,7 +127,7 @@ export default {
         if (CheckCoolDown(cooldownkey)) {
             return AlertCoolDown(msg, cooldownkey, Bot);
         }
-        SetCoolDown(msg, cooldownkey, randomWorkCooldownMs());
+        SetCoolDown(msg, cooldownkey, GetRandomFunCooldown());
 
         const promptEmbed = structuredClone(Bot.Embed);
         promptEmbed.Title = 'What kind of job would you like to do?';

@@ -74,6 +74,12 @@ export function CheckCoolDown(key) {
     return cooldowns.has(key);
 }
 
+export function GetRandomFunCooldown() {
+    const minMs = 14000;
+    const maxMs = 17000;
+    return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+}
+
 export function GetUser(user, Bot) {
     let found = false;
     Bot.Users.forEach(function (value, index, array) {

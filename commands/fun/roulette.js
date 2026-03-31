@@ -1,6 +1,6 @@
 // MOVABLE: 9kFun bot - Roulette gambling game
 // This command will be moved to a separate 9kFun bot in the future
-import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown } from '../../utils/functions.js';
+import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown, GetRandomFunCooldown } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
 const RouletteNumbers = {
@@ -23,7 +23,7 @@ export default {
         if (CheckCoolDown(cooldownkey)) {
             return AlertCoolDown(interaction, cooldownkey, Bot)
         }
-        SetCoolDown(interaction, cooldownkey, 10000);
+        SetCoolDown(interaction, cooldownkey, GetRandomFunCooldown());
 
         let maxbet = 100;
         interaction.guild.members.fetch(author.id).then(MemberCache => {

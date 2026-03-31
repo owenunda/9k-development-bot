@@ -1,6 +1,6 @@
 // MOVABLE: 9kFun bot - Slot machine gambling game
 // This command will be moved to a separate 9kFun bot in the future
-import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown } from '../../utils/functions.js';
+import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown, GetRandomFunCooldown } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 import logger from '../../utils/logger.js';
 
@@ -28,7 +28,7 @@ export default {
         if (CheckCoolDown(cooldownkey)) {
             return AlertCoolDown(msg, cooldownkey, Bot)
         }
-        SetCoolDown(msg, cooldownkey, 9000);
+        SetCoolDown(msg, cooldownkey, GetRandomFunCooldown());
 
         let maxbet = 100;
         msg.guild.members.fetch(userId).then(MemberCache => {
@@ -57,7 +57,6 @@ export default {
                         let Prize = 0;
 
                         const BettingOdds = Math.floor(25 - (Bet / 5));
-                        logger.info(`User Betting: ${Bet.toString()} Odds Of Winning: ${BettingOdds.toString()}`);
                         UserRoll.one = Emojis[Math.floor(Math.random() * Emojis.length)];
                         UserRoll.two = Emojis[Math.floor(Math.random() * Emojis.length)];
                         UserRoll.three = Emojis[Math.floor(Math.random() * Emojis.length)];

@@ -1,6 +1,6 @@
 // MOVABLE: 9kFun bot - Number guessing game
 // This command will be moved to a separate 9kFun bot in the future
-import { CreateEmbed, SearchString } from '../../utils/functions.js';
+import { CreateEmbed, SearchString, SetCoolDown, AlertCoolDown, CheckCoolDown, GetRandomFunCooldown } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
 export default {
@@ -14,6 +14,12 @@ export default {
         const isInteraction = msg.commandName !== undefined;
         const userId = isInteraction ? msg.user.id : msg.author.id;
         const channel = msg.channel;
+
+        const cooldownkey = `Guess-${userId}`;
+        if (CheckCoolDown(cooldownkey)) {
+            return AlertCoolDown(msg, cooldownkey, Bot);
+        }
+        SetCoolDown(msg, cooldownkey, GetRandomFunCooldown());
 
         const Embed = structuredClone(Bot.Embed);
         Embed.Title = 'Number Guessing!';

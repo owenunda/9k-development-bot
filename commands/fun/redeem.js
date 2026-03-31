@@ -1,6 +1,6 @@
 // MOVABLE: 9kFun bot - Code redemption system
 // This command will be moved to a separate 9kFun bot in the future
-import { CreateEmbed } from '../../utils/functions.js';
+import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown, GetRandomFunCooldown } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
 const usedcodes = [];
@@ -21,6 +21,12 @@ export default {
         const userId = isInteraction ? msg.user.id : msg.author.id;
         const channel = msg.channel;
         
+        const cooldownkey = `Redeem-${userId}`;
+        if (CheckCoolDown(cooldownkey)) {
+            return AlertCoolDown(msg, cooldownkey, Bot);
+        }
+        SetCoolDown(msg, cooldownkey, GetRandomFunCooldown());
+
         // Get the code based on command type
         let code;
         if (isInteraction) {

@@ -1,6 +1,6 @@
 // MOVABLE: 9kFun bot - Simple coinflip game
 // This command will be moved to a separate 9kFun bot in the future
-import { CreateEmbed } from '../../utils/functions.js';
+import { CreateEmbed, SetCoolDown, AlertCoolDown, CheckCoolDown, GetRandomFunCooldown } from '../../utils/functions.js';
 import { SlashCommandBuilder } from 'discord.js';
 
 export default {
@@ -11,6 +11,15 @@ export default {
     .setDescription('Flips a coin! (🎮 Fun command - may move to 9kFun bot)'),
     aliases: [],
     execute(interaction, User, Bot) {
+        const isInteraction = interaction.commandName !== undefined;
+        const userId = isInteraction ? interaction.user.id : interaction.author.id;
+
+        const cooldownkey = `Coinflip-${userId}`;
+        if (CheckCoolDown(cooldownkey)) {
+            return AlertCoolDown(interaction, cooldownkey, Bot);
+        }
+        SetCoolDown(interaction, cooldownkey, GetRandomFunCooldown());
+
         let Res = Math.floor(Math.random() * 2);
         if (Res == 0) { Res = 'Heads' }
         else { Res = 'Tails' }
