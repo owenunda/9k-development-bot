@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import config from './config.js';
 import logger from './utils/logger.js';
-import { GetUser, AddUser, SearchString, SaveBotUsers, ReturnDB, AlertCoolDown, SetCoolDown, CheckCoolDown, CheckMonthlyReset, GetActiveAntiSpam, ShouldShowAntiSpam, GetRandomQuestion, CreateEmbed } from './utils/functions.js';
+import { GetUser, AddUser, SearchString, SaveBotUsers, ReturnDB, AlertCoolDown, SetCoolDown, CheckCoolDown, CheckMonthlyReset, GetActiveAntiSpam, ShouldShowAntiSpam, GetRandomQuestion, CreateEmbed, LoadRedeemCodes } from './utils/functions.js';
 import * as mysql2 from 'mysql2';
 import * as canvas from 'canvas';
 import * as ytSearch from 'yt-search';
@@ -55,7 +55,7 @@ Bot.Admin.SQL.Password = config.database.password;
 Bot.Admin.SQL.Host = config.database.host || '127.0.0.1';
 Bot.Admin.SQL.Database = config.database.database || 'webdata';
 Bot.Admin.SQL.Port = config.database.port || 3306;
-Bot.Codes = config.codes;
+Bot.Codes = [];
 
 Bot.WebHooks = {
         Team: new WebhookClient({
@@ -199,6 +199,18 @@ Bot.Client.once(Events.ClientReady, readyClient => {
         // Restore active giveaways
         giveawayCommand.restoreActiveGiveaways(Bot.Client);
 
+        // Load Redeem Codes dynamically
+        LoadRedeemCodes(Bot).then(codes => {
+                Bot.Codes = codes.map(c => c.code);
+                logger.info(`Loaded ${codes.length} redeem codes from DB.`);
+        });
+        // Reload every 10 minutes (600000 ms) for hot reloading
+        setInterval(() => {
+                LoadRedeemCodes(Bot).then(codes => {
+                        Bot.Codes = codes.map(c => c.code);
+                });
+        }, 600000);
+
         // Initialize Discord-to-Channel logging
         logger.initDiscord(Bot.Client, '1487161342208245790');
 });
@@ -244,8 +256,7 @@ Bot.Client.on('messageCreate', msg => {
                         activeAntiSpam.delete(msg.author.id);
                         return msg.reply('**Verified.** You can continue using commands.');
                 }
-                return; // Silently ignore other messages or remind them? The requirement says "si no eres un bot, escribe...". 
-                // We block commands below, so we just return here.
+                return;
         }
 
         if (SearchString(mtext, Bot.Codes) && cmdrunning == false) {

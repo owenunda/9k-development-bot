@@ -755,10 +755,90 @@ export function DeleteShopItem(itemId, Bot) {
     });
 }
 
-/**
- * Random Question System (Anti-Spam)
- */
+// Redeem Code System
+export function LoadRedeemCodes(Bot) {
+    return new Promise((resolve, reject) => {
+        const connection = ConnectDB(Bot);
+        connection.query(
+            'SELECT * FROM RedeemCodes WHERE active = 1',
+            function (error, results, fields) {
+                connection.end();
+                if (error) {
+                    logger.error({ message: 'LoadRedeemCodes Error', error, label: 'Database' });
+                    resolve([]);
+                } else {
+                    resolve(results || []);
+                }
+            }
+        );
+    });
+}
 
+export function GetRedeemCode(code, Bot) {
+    return new Promise((resolve, reject) => {
+        const connection = ConnectDB(Bot);
+        connection.query(
+            'SELECT * FROM RedeemCodes WHERE code = ? AND active = 1 LIMIT 1',
+            [code],
+            function (error, results, fields) {
+                connection.end();
+                if (error) {
+                    logger.error({ message: 'GetRedeemCode Error', error, label: 'Database' });
+                    resolve(null);
+                } else {
+                    resolve(results.length > 0 ? results[0] : null);
+                }
+            }
+        );
+    });
+}
+
+export function CheckCodeUsed(userid, code_id, Bot) {
+    return new Promise((resolve, reject) => {
+        const connection = ConnectDB(Bot);
+        connection.query(
+            'SELECT * FROM UsedCodes WHERE userid = ? AND code_id = ? LIMIT 1',
+            [userid, code_id],
+            function (error, results, fields) {
+                connection.end();
+                if (error) {
+                    logger.error({ message: 'CheckCodeUsed Error', error, label: 'Database' });
+                    resolve(false);
+                } else {
+                    resolve(results.length > 0);
+                }
+            }
+        );
+    });
+}
+
+export function MarkCodeUsed(userid, code_id, Bot) {
+    return new Promise((resolve, reject) => {
+        const connection = ConnectDB(Bot);
+        connection.connect();
+        
+        connection.query(
+            'INSERT IGNORE INTO UsedCodes (userid, code_id) VALUES (?, ?)',
+            [userid, code_id],
+            function (error, results, fields) {
+                connection.end();
+                if (error) {
+                    logger.error({ message: 'MarkCodeUsed Error', error, label: 'Database' });
+                    resolve(false);
+                } else {
+                    resolve(true);
+                }
+            }
+        );
+        
+        connection.on('error', function (err) {
+            logger.error({ message: 'MarkCodeUsed Connection Error', error: err, label: 'Database' });
+            resolve(false);
+        });
+    });
+}
+
+// Random Question System (Anti-Spam)
 export function ShouldShowAntiSpam() {
     // Probability 50%
     return Math.random() < 0.002;
