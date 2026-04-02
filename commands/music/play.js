@@ -43,8 +43,20 @@ export default {
                     mute: false,
                     defaultVolume: 100,
                 });
-            } else if (player.voiceChannel !== member.voice.channel.id) {
-                player.setVoiceChannel(member.voice.channel.id, { deaf: true });
+            } else {
+                player.setTextChannel(interaction.channel.id);
+
+                if (player.voiceChannel !== member.voice.channel.id) {
+                    player.setVoiceChannel(member.voice.channel.id, { deaf: true });
+                } else if (!player.connected) {
+                    // Reconnect stale players that still exist in cache but lost voice connectivity.
+                    player.connect({
+                        guildId: guild.id,
+                        voiceChannel: member.voice.channel.id,
+                        deaf: true,
+                        mute: false,
+                    });
+                }
             }
 
             if (!player.volume || player.volume <= 0) {
@@ -90,7 +102,7 @@ export default {
                     player.queue.add(track);
                 }
                 if (!player.playing && !player.paused) {
-                    await player.play();
+                    player = await playWithReconnect(player, guild.id, member.voice.channel.id, interaction.channel.id);
                 }
                 return interaction.editReply(`Added playlist: **${result.playlistInfo?.name || 'Unknown Playlist'}** (${result.tracks.length} songs)`).catch(() => {});
             } else {
@@ -100,7 +112,7 @@ export default {
 
                 const wasPlaying = player.playing || player.paused;
                 if (!player.playing && !player.paused) {
-                    await player.play();
+                    player = await playWithReconnect(player, guild.id, member.voice.channel.id, interaction.channel.id);
                 }
 
                 const uri = getTrackUri(track);
@@ -126,6 +138,59 @@ export default {
             }
         } catch (error) {
             return interaction.editReply(`An error occurred: ${error.message}`).catch(() => {});
+        }
+    }
+}
+
+async function playWithReconnect(player, guildId, voiceChannelId, textChannelId) {
+    try {
+        await player.play();
+        return player;
+    } catch (error) {
+        if (!/Player connection is not initiated/i.test(error?.message || '')) {
+            throw error;
+        }
+
+        player.connect({
+            guildId,
+            voiceChannel: voiceChannelId,
+            deaf: true,
+            mute: false,
+        });
+
+        // Give Riffy a chance to receive VOICE_STATE_UPDATE/VOICE_SERVER_UPDATE before retrying play.
+        if (player.connection?.resolve) {
+            await player.connection.resolve().catch(() => {});
+        }
+
+        try {
+            await player.play();
+            return player;
+        } catch (retryError) {
+            if (!/Player connection is not initiated/i.test(retryError?.message || '')) {
+                throw retryError;
+            }
+
+            const queuedTracks = [...player.queue];
+            const targetTextChannel = textChannelId || player.textChannel;
+            const targetVolume = player.volume || 100;
+            player.destroy();
+
+            const freshPlayer = player.riffy.createConnection({
+                guildId,
+                textChannel: targetTextChannel,
+                voiceChannel: voiceChannelId,
+                deaf: true,
+                mute: false,
+                defaultVolume: targetVolume,
+            });
+
+            for (const queuedTrack of queuedTracks) {
+                freshPlayer.queue.add(queuedTrack);
+            }
+
+            await freshPlayer.play();
+            return freshPlayer;
         }
     }
 }

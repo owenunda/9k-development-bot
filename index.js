@@ -155,10 +155,12 @@ Bot.Client.riffy.on('trackStart', async (player, track) => {
         }
 });
 
-Bot.Client.riffy.on('trackError', async (player, track) => {
+Bot.Client.riffy.on('trackError', async (player, track, payload) => {
         const channel = Bot.Client.channels.cache.get(player.textChannel);
+        const reason = payload?.exception?.message || payload?.exception?.cause || 'Unknown Lavalink error';
+        logger.error(`[Riffy] Track error in guild ${player.guildId}: ${reason}`);
         if (channel) {
-                channel.send(`Error playing: **${track.info.title}**`);
+                channel.send(`Error playing: **${track.info.title}**\nReason: ${reason}`);
         }
 });
 
@@ -184,9 +186,26 @@ Bot.Client.riffy.on('queueEnd', async (player) => {
 
 // Handle voice state & voice server updates for Riffy
 // Forward only voice packets to avoid unexpected duplicate handling.
+const forwardVoicePacketToRiffy = (packet, source) => {
+        if (!packet?.t || !packet?.d?.guild_id) return;
+        if (![GatewayDispatchEvents.VoiceStateUpdate, GatewayDispatchEvents.VoiceServerUpdate].includes(packet.t)) return;
+
+        Bot.Client.riffy.updateVoiceState(packet).catch((error) => {
+                logger.error(`[Riffy] Failed forwarding ${packet.t} from ${source}: ${error.message}`);
+        });
+};
+
 Bot.Client.on('raw', (d) => {
-        if (![GatewayDispatchEvents.VoiceStateUpdate, GatewayDispatchEvents.VoiceServerUpdate].includes(d.t)) return;
-        Bot.Client.riffy.updateVoiceState(d);
+        forwardVoicePacketToRiffy(d, 'raw');
+});
+
+// Also listen through ws dispatch events for better compatibility across discord.js versions.
+Bot.Client.ws.on(GatewayDispatchEvents.VoiceStateUpdate, (data) => {
+        forwardVoicePacketToRiffy({ t: GatewayDispatchEvents.VoiceStateUpdate, d: data }, 'ws');
+});
+
+Bot.Client.ws.on(GatewayDispatchEvents.VoiceServerUpdate, (data) => {
+        forwardVoicePacketToRiffy({ t: GatewayDispatchEvents.VoiceServerUpdate, d: data }, 'ws');
 });
 
 Bot.Client.once(Events.ClientReady, readyClient => {
