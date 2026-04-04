@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import logger from '../../utils/logger.js';
+import { GetUserDailyData, GetDailyTiers, SaveUserDaily, CreateEmbed } from '../../utils/functions.js';
 
 // Get tier based on racha days from dynamic tiers array
 function getTierByStreak(streak, tiers) {
