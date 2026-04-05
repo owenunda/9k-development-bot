@@ -10,10 +10,10 @@ function getTierByStreak(streak, tiers) {
     }
     
     // Sort DESC to find the highest qualifying tier (e.g. 100, then 50, then 31, then 0)
-    const sortedTiers = [...tiers].sort((a, b) => b.required_days - a.required_days);
+    const sortedTiers = [...tiers].sort((a, b) => Number(b.required_days) - Number(a.required_days));
     
     for (const tier of sortedTiers) {
-        if (streak >= tier.required_days) {
+        if (streak >= Number(tier.required_days)) {
             return tier;
         }
     }
@@ -26,14 +26,14 @@ function getNextTierInfo(streak, tiers) {
     if (!tiers || tiers.length === 0) return null;
     
     // Sort ASC to find the next threshold
-    const sortedTiers = [...tiers].sort((a, b) => a.required_days - b.required_days);
-    const nextTier = sortedTiers.find(t => t.required_days > streak);
+    const sortedTiers = [...tiers].sort((a, b) => Number(a.required_days) - Number(b.required_days));
+    const nextTier = sortedTiers.find(t => Number(t.required_days) > streak);
     
     if (!nextTier) return null;
     
     return {
         name: nextTier.name,
-        daysUntilNext: nextTier.required_days - streak
+        daysUntilNext: Number(nextTier.required_days) - streak
     };
 }
 
@@ -41,8 +41,10 @@ function getNextTierInfo(streak, tiers) {
 // Formula: totalCash = tier.points + streak bonus
 function processRewards(tier, streak) {
     // Original formula: base points + streak days as bonus
-    const totalCash = (tier.points || 0) + streak;
-    const rewardMessages = [`+${totalCash} cash (${tier.points} base + ${streak} streak)`];
+    const points = Number(tier.points || 0);
+    const numStreak = Number(streak || 0);
+    const totalCash = points + numStreak;
+    const rewardMessages = [`+${totalCash} cash (${points} base + ${numStreak} streak)`];
     
     return { totalCash, rewardMessages };
 }
@@ -82,7 +84,7 @@ export default {
             const now = new Date();
             const lastClaim = dailyData.last_daily_claim ? new Date(dailyData.last_daily_claim) : null;
             
-            let currentStreak = dailyData.daily_streak || 0;
+            let currentStreak = Number(dailyData.daily_streak || 0);
             
             const Embed = structuredClone(Bot.Embed);
             
@@ -93,7 +95,7 @@ export default {
                 const { totalCash, rewardMessages } = processRewards(tier, currentStreak);
                 const nextTierInfo = getNextTierInfo(currentStreak, tiers);
                 
-                User.cash += totalCash;
+                User.cash = Number(User.cash) + totalCash;
                 
                 Embed.Color = 5763719; // Green
                 Embed.Title = 'Daily Reward Claimed!';
@@ -150,7 +152,7 @@ export default {
                 const { totalCash, rewardMessages } = processRewards(newTier, currentStreak);
                 const nextTierInfo = getNextTierInfo(currentStreak, tiers);
                 
-                User.cash += totalCash;
+                User.cash = Number(User.cash) + totalCash;
                 
                 // Check if tier upgraded
                 const tierUpgraded = oldTier.name !== newTier.name;
@@ -189,7 +191,7 @@ export default {
                 const { totalCash, rewardMessages } = processRewards(tier, currentStreak);
                 const nextTierInfo = getNextTierInfo(currentStreak, tiers);
                 
-                User.cash += totalCash;
+                User.cash = Number(User.cash) + totalCash;
                 
                 Embed.Color = 15844367; // Yellow/Orange
                 Embed.Title = 'Daily Reward Claimed';
