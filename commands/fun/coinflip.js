@@ -10,6 +10,7 @@ export default {
     .setName('coinflip')
     .setDescription('Flips a coin! (🎮 Fun command - may move to 9kFun bot)'),
     aliases: [],
+    botPoints: true,
     execute(interaction, User, Bot) {
         const isInteraction = interaction.commandName !== undefined;
         const userId = isInteraction ? interaction.user.id : interaction.author.id;

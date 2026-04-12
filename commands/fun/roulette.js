@@ -16,6 +16,7 @@ export default {
         .setName('roulette')
         .setDescription('Play roulette and bet your cash on numbers or colors (🎮 Fun command - may move to 9kFun bot)'),
     aliases: [],
+    botPoints: true,
     execute(interaction, User, Bot) {
         const isInteraction = interaction?.commandName !== undefined;
         const author = interaction.author || interaction.user;

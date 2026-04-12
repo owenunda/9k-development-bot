@@ -81,9 +81,15 @@ function buildOverviewBlock(member, discordUser, economyUser, dailyData) {
     const dailyStreak = dailyData?.daily_streak ?? 0;
     const lastClaim = dailyData?.last_daily_claim ? new Date(dailyData.last_daily_claim) : null;
 
+    const spamScore = economyUser?.spam_score ?? 0;
+    const restrictedUntil = economyUser?.restricted_until ? new Date(economyUser.restricted_until) : null;
+    const isRestricted = restrictedUntil && restrictedUntil > new Date();
+
     const lines = [
         '__Economy__',
         `**Balance:** ${balance}`,
+        `**Spam Score:** ${spamScore.toFixed(1)} / 100`,
+        `**Restricted:** ${isRestricted ? `Yes (until ${formatDiscordDate(restrictedUntil)})` : 'No'}`,
         `**Website User:** ${websiteUser}`,
         `**Daily Streak:** ${dailyStreak} days`,
         `**Last Daily Claim:** ${lastClaim ? formatDiscordDate(lastClaim) : 'Never'}`,

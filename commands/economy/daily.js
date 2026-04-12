@@ -65,6 +65,7 @@ export default {
         .setName('daily')
         .setDescription('Claim your daily reward and maintain your streak!'),
     aliases: [],
+    botPoints: true,
     async execute(msg, User, Bot) {
         const isInteraction = msg.commandName !== undefined;
         const userId = isInteraction ? msg.user.id : msg.author.id;

@@ -49,6 +49,21 @@ export function AlertCoolDown(msg, key, Bot) {
         return;
     }
     const now = Date.now();
+    const userId = msg.user ? msg.user.id : msg.author.id;
+
+    // Track consecutive cooldowns per command
+    const lastCooldownKey = `LastCooldown-${userId}-${key}`;
+    const lastCooldownTime = alertcooldowns.get(lastCooldownKey) || 0;
+    
+    let scoreIncrease = 5;
+    // If second cooldown for same command within 30 seconds
+    if (now - lastCooldownTime < 30000) {
+        scoreIncrease = 20;
+    }
+    
+    IncrementSpamScore(userId, scoreIncrease, Bot);
+    alertcooldowns.set(lastCooldownKey, now);
+
     const expirationTime = cooldowns.get(key);
     let timeLeft = expirationTime - now;
     timeLeft = (timeLeft / 1000).toFixed(1);
@@ -93,7 +108,8 @@ export function GetUser(user, Bot) {
 export function AddUser(id, Bot) {
     const connection = ConnectDB(Bot);
     connection.connect();
-    connection.query("INSERT INTO `BotUsers` (`id`, `userid`, `messages`, `exp`, `cash`) VALUES (NULL, '" + id + "', '0', '0', '0');", function (error, results, fields) {
+    // spam_score starts at 0, restricted_until is NULL by default
+    connection.query("INSERT INTO `BotUsers` (`id`, `userid`, `messages`, `exp`, `cash`, `spam_score`) VALUES (NULL, '" + id + "', '0', '0', '0', '0');", function (error, results, fields) {
         if (error) logger.error({ message: 'AddUser Query Error', error, label: 'Database' });
     });
     connection.on('error', function (err) { logger.error({ message: 'AddUser Connection Error', error: err, label: 'Database' }); });
@@ -131,10 +147,11 @@ export function SaveBotUsers(Bot) {
         // Message counting is handled by another bot; do not overwrite `messages`.
         const exp = value.exp ?? 0;
         const cash = value.cash ?? 0;
+        const spamScore = value.spam_score ?? 0;
 
         connection.query(
-            'UPDATE BotUsers SET exp = ?, cash = ? WHERE userid = ?;',
-            [exp, cash, value.userid],
+            'UPDATE BotUsers SET exp = ?, cash = ?, spam_score = ? WHERE userid = ?;',
+            [exp, cash, spamScore, value.userid],
             function (error, results) {
                 if (error) logger.error({ message: 'SaveBotUsers Update Error', error, label: 'Database' });
             }
@@ -155,10 +172,11 @@ export function SaveUser(User, Bot) {
     // Message counting is handled by another bot; do not overwrite `messages`.
     const exp = User.exp ?? 0;
     const cash = User.cash ?? 0;
+    const spamScore = User.spam_score ?? 0;
 
     connection.query(
-        'UPDATE BotUsers SET exp = ?, cash = ? WHERE userid = ?;',
-        [exp, cash, User.userid],
+        'UPDATE BotUsers SET exp = ?, cash = ?, spam_score = ? WHERE userid = ?;',
+        [exp, cash, spamScore, User.userid],
         function (error) {
             if (error) logger.error({ message: 'SaveUser Update Error', error, label: 'Database' });
         }
@@ -866,5 +884,98 @@ export function GetRandomQuestion(Bot) {
             text: "**Anti-Spam Control!** Please type: **'9k'**",
             answer: '9k'
         };
+    }
+}
+
+/* Anti-Spam & Score Logic */
+
+export function IncrementSpamScore(userid, amount, Bot) {
+    const User = GetUser(userid, Bot);
+    if (!User) return;
+
+    if (!User.spam_score) User.spam_score = 0;
+    User.spam_score += amount;
+    
+    // Save periodically via SaveBotUsers or immediately for critical updates
+    // Here we just update cache, index.js SaveBotUsers will handle persistence
+}
+
+export function CheckRestricted(userid, Bot) {
+    const User = GetUser(userid, Bot);
+    if (!User) return false;
+
+    if (!User.restricted_until) return false;
+    
+    const restrictedUntil = new Date(User.restricted_until);
+    if (restrictedUntil > new Date()) {
+        return true;
+    } else {
+        // Restriction expired, clean up
+        User.restricted_until = null;
+        return false;
+    }
+}
+
+export function SetRestricted(userid, minutes, Bot) {
+    const User = GetUser(userid, Bot);
+    if (!User) return;
+
+    const until = minutes <= 0 ? null : new Date(Date.now() + minutes * 60000);
+    User.restricted_until = until;
+    
+    // Immediate DB update for restriction
+    const connection = ConnectDB(Bot);
+    connection.connect();
+    
+    if (until) {
+        connection.query('UPDATE BotUsers SET restricted_until = ?, spam_score = ? WHERE userid = ?', [until, User.spam_score || 0, userid], (err) => {
+            if (err) logger.error({ message: 'SetRestricted SQL Error', error: err, label: 'Database' });
+            connection.end();
+        });
+    } else {
+        connection.query('UPDATE BotUsers SET restricted_until = NULL, spam_score = ? WHERE userid = ?', [User.spam_score || 0, userid], (err) => {
+            if (err) logger.error({ message: 'SetRestricted SQL Error (Unrestrict)', error: err, label: 'Database' });
+            connection.end();
+        });
+    }
+}
+
+export function ResetSpamScore(userid, Bot) {
+    const User = GetUser(userid, Bot);
+    if (!User) return;
+
+    // score = 100 / 100 = 1 (or score / 100)
+    User.spam_score = Math.max(0, (User.spam_score || 0) / 100);
+}
+
+export async function ProcessSpamDecay(Bot) {
+    if (!Bot.Users) return;
+    
+    const now = new Date();
+    logger.info('Running global spam score decay...');
+    
+    for (const User of Bot.Users) {
+        if (!User.spam_score) User.spam_score = 0;
+        
+        // 1. Fixed decay: -25 every 5 minutes
+        User.spam_score = Math.max(0, User.spam_score - 25);
+        
+        // 2. Account age factor: score reduced by (account age days / 1095)
+        // We need to fetch discord user to get account age, which is expensive for all users.
+        // Instead, we might want to store account_age or created_at in BotUsers.
+        // For now, if we don't have created_at, we skip this part or fetch lazily.
+        // Let's assume we fetch only if they have a non-zero score.
+        if (User.spam_score > 0) {
+            try {
+                const discordUser = await Bot.Client.users.fetch(User.userid).catch(() => null);
+                if (discordUser) {
+                    const ageDays = Math.floor((now - discordUser.createdAt) / 86400000);
+                    const ageReduction = ageDays / 1095;
+                    User.spam_score = Math.max(0, User.spam_score - ageReduction);
+                }
+            } catch (e) {
+                // ignore fetch errors
+            }
+        }
     }
 }

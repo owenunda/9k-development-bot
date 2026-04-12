@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import config from './config.js';
 import logger from './utils/logger.js';
-import { GetUser, AddUser, SearchString, SaveBotUsers, ReturnDB, AlertCoolDown, SetCoolDown, CheckCoolDown, CheckMonthlyReset, GetActiveAntiSpam, ShouldShowAntiSpam, GetRandomQuestion, CreateEmbed, LoadRedeemCodes } from './utils/functions.js';
+import { GetUser, AddUser, SearchString, SaveBotUsers, ReturnDB, AlertCoolDown, SetCoolDown, CheckCoolDown, CheckMonthlyReset, GetActiveAntiSpam, ShouldShowAntiSpam, GetRandomQuestion, CreateEmbed, LoadRedeemCodes, CheckRestricted, IncrementSpamScore, ResetSpamScore, SetRestricted, ProcessSpamDecay } from './utils/functions.js';
 import * as mysql2 from 'mysql2';
 import * as canvas from 'canvas';
 import * as ytSearch from 'yt-search';
@@ -93,6 +93,8 @@ Bot.SongSys.Servers = [];
 Bot.SongSys.AllowedServers = config.music.allowedServers;
 
 const messageCashCooldowns = new Map();
+const userCommandHistory = new Map(); // Tracks last 3 commands per user: { userId: [cmd1, cmd2, cmd3] }
+const restrictionAlertCooldowns = new Map();
 
 function getMessageCashCooldownMs() {
         return 14000 + Math.floor(Math.random() * 3001);
@@ -232,9 +234,28 @@ Bot.Client.once(Events.ClientReady, readyClient => {
 
         // Initialize Discord-to-Channel logging
         logger.initDiscord(Bot.Client, '1487161342208245790');
+
+        // Global Anti-Spam Decay (Every 5 minutes)
+        setInterval(() => {
+            ProcessSpamDecay(Bot);
+        }, 5 * 60 * 1000);
 });
 
 Bot.Client.on('messageCreate', msg => {
+        if (msg.author.bot) { return }
+
+        // 1. Restricted Mode Check
+        if (CheckRestricted(msg.author.id, Bot)) {
+            const lastAlert = restrictionAlertCooldowns.get(msg.author.id) || 0;
+            if (Date.now() - lastAlert > 60000) { // 1 min cooldown to avoid self-spamming
+                restrictionAlertCooldowns.set(msg.author.id, Date.now());
+                const UserObj = GetUser(msg.author.id, Bot);
+                const timeLeft = UserObj.restricted_until ? Math.max(1, Math.ceil((new Date(UserObj.restricted_until) - Date.now()) / 60000)) : 5;
+                msg.reply(`**Restricted.** You are currently restricted from using the bot for another **${timeLeft} minutes**.`);
+            }
+            return; // Bot ignores completely
+        }
+
         let cmdrunning = false;
         let User = GetUser(msg.author.id, Bot);
         if (User == false) {
@@ -243,12 +264,12 @@ Bot.Client.on('messageCreate', msg => {
                 User.exp = 0;
                 User.messages = 0;
                 User.cash = 0;
+                User.spam_score = 0;
                 Bot.Users.push(User);
                 AddUser(User.userid, Bot);
         }
         User = GetUser(msg.author.id, Bot);
         //User.messages += 1;
-        if (msg.author.bot) { return }
 
         const messageCashKey = `MsgCash-${msg.author.id}`;
         const now = Date.now();
@@ -273,9 +294,14 @@ Bot.Client.on('messageCreate', msg => {
                 const challenge = activeAntiSpam.get(msg.author.id);
                 if (msg.content.toLowerCase().trim() === challenge.answer) {
                         activeAntiSpam.delete(msg.author.id);
-                        return msg.reply('**Verified.** You can continue using commands.');
+                        ResetSpamScore(msg.author.id, Bot);
+                        return msg.reply('**Verified.** Your spam score has been reset.');
+                } else {
+                        // Failed Captcha
+                        activeAntiSpam.delete(msg.author.id);
+                        SetRestricted(msg.author.id, 5, Bot); // 5 mins
+                        return msg.reply('**Captcha Failed.** You have been restricted for 5 minutes. The bot will no longer respond to you.');
                 }
-                return;
         }
 
         if (SearchString(mtext, Bot.Codes) && cmdrunning == false) {
@@ -303,6 +329,37 @@ Bot.Client.on('messageCreate', msg => {
         if (bestMatch && !cmdrunning) {
              // Roll for anti-spam before executing
              try {
+                 // Scoring Logic
+                 IncrementSpamScore(msg.author.id, 1, Bot);
+                 if (bestMatch.botPoints) IncrementSpamScore(msg.author.id, 1, Bot);
+
+                 // Repetition tracking
+                 let history = userCommandHistory.get(msg.author.id) || [];
+                 history.push(bestMatch.name);
+                 if (history.length > 3) history.shift();
+                 userCommandHistory.set(msg.author.id, history);
+
+                 if (history.length === 3 && history.every(v => v === bestMatch.name)) {
+                     IncrementSpamScore(msg.author.id, 5, Bot);
+                 }
+
+                 // Score-based Captcha Trigger
+                 if ((User.spam_score || 0) >= 100) {
+                     const challenge = GetRandomQuestion(Bot);
+                     activeAntiSpam.set(msg.author.id, challenge);
+                     
+                     // If they already hit 100 and typed something else, they fail
+                     // but here we just show it for the first time
+                     return msg.reply(challenge.text);
+                 }
+
+                 // Existing Probabilistic Captcha
+                 if (ShouldShowAntiSpam()) {
+                     const challenge = GetRandomQuestion(Bot);
+                     activeAntiSpam.set(msg.author.id, challenge);
+                     return msg.reply(challenge.text);
+                 }
+
                  bestMatch.execute(msg, User, Bot);
              } catch (error) {
                  logger.error({ 
@@ -417,6 +474,21 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
         }
 
         try {
+                // Restricted Check
+                if (CheckRestricted(interaction.user.id, Bot)) {
+                    const lastAlert = restrictionAlertCooldowns.get(interaction.user.id) || 0;
+                    if (Date.now() - lastAlert > 60000) {
+                        restrictionAlertCooldowns.set(interaction.user.id, Date.now());
+                        const UserObj = GetUser(interaction.user.id, Bot);
+                        const timeLeft = UserObj.restricted_until ? Math.max(1, Math.ceil((new Date(UserObj.restricted_until) - Date.now()) / 60000)) : 5;
+                        await interaction.reply({ 
+                            content: `**Restricted.** You are currently restricted from using the bot for another **${timeLeft} minutes**.`, 
+                            ephemeral: true 
+                        }).catch(() => {});
+                    }
+                    return;
+                }
+
                 // Get or create user
                 let User = GetUser(interaction.user.id, Bot);
                 if (User == false) {
@@ -425,6 +497,7 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                         User.exp = 0;
                         User.messages = 0;
                         User.cash = 0;
+                        User.spam_score = 0;
                         Bot.Users.push(User);
                         AddUser(User.userid, Bot);
                         User = GetUser(interaction.user.id, Bot);
@@ -437,6 +510,27 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                         content: `You have an active anti-spam control. Please type the requested word in the channel before using more commands.`, 
                         ephemeral: true 
                     });
+                }
+
+                // Scoring Logic
+                IncrementSpamScore(interaction.user.id, 1, Bot);
+                if (command.botPoints) IncrementSpamScore(interaction.user.id, 1, Bot);
+
+                // Repetition tracking
+                let history = userCommandHistory.get(interaction.user.id) || [];
+                history.push(command.name);
+                if (history.length > 3) history.shift();
+                userCommandHistory.set(interaction.user.id, history);
+
+                if (history.length === 3 && history.every(v => v === command.name)) {
+                    IncrementSpamScore(interaction.user.id, 5, Bot);
+                }
+
+                // Score-based Captcha Trigger
+                if ((User.spam_score || 0) >= 100) {
+                    const challenge = GetRandomQuestion(Bot);
+                    activeAntiSpam.set(interaction.user.id, challenge);
+                    return interaction.reply({ content: challenge.text });
                 }
 
                 if (ShouldShowAntiSpam()) {
