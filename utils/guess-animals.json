@@ -1,0 +1,82 @@
+[
+  {
+    "answer": "elephant",
+    "hints": ["Largest land mammal", "Has a trunk", "Known for big ears"]
+  },
+  {
+    "answer": "penguin",
+    "hints": ["Bird that cannot fly", "Lives in cold regions", "Waddles on ice"]
+  },
+  {
+    "answer": "kangaroo",
+    "hints": ["From Australia", "Jumps long distances", "Carries babies in a pouch"]
+  },
+  {
+    "answer": "dolphin",
+    "hints": ["Marine mammal", "Very intelligent", "Uses clicks and whistles"]
+  },
+  {
+    "answer": "giraffe",
+    "hints": ["Tallest land animal", "Very long neck", "Spotted coat"]
+  },
+  {
+    "answer": "tiger",
+    "hints": ["Big cat", "Orange coat with black stripes", "Powerful predator"]
+  },
+  {
+    "answer": "zebra",
+    "hints": ["African animal", "Black and white stripes", "Related to horses"]
+  },
+  {
+    "answer": "rabbit",
+    "hints": ["Long ears", "Loves carrots", "Jumps quickly"]
+  },
+  {
+    "answer": "lion",
+    "hints": ["Known as king of the jungle", "Male has a mane", "Lives in prides"]
+  },
+  {
+    "answer": "bear",
+    "hints": ["Large mammal", "Can hibernate", "Likes honey in stories"]
+  },
+  {
+    "answer": "octopus",
+    "hints": ["Lives in the sea", "Has eight arms", "Can release ink"]
+  },
+  {
+    "answer": "whale",
+    "hints": ["Very large marine animal", "Breathes air", "Communicates with songs"]
+  },
+  {
+    "answer": "wolf",
+    "hints": ["Wild canine", "Howls", "Often hunts in packs"]
+  },
+  {
+    "answer": "fox",
+    "hints": ["Small wild canine", "Known for being clever", "Usually has a bushy tail"]
+  },
+  {
+    "answer": "owl",
+    "hints": ["Bird of prey", "Active at night", "Can rotate its head a lot"]
+  },
+  {
+    "answer": "eagle",
+    "hints": ["Bird of prey", "Excellent eyesight", "Builds nests on high places"]
+  },
+  {
+    "answer": "shark",
+    "hints": ["Ocean predator", "Has many sharp teeth", "Some species are very large"]
+  },
+  {
+    "answer": "panda",
+    "hints": ["Black and white bear", "Eats bamboo", "Native to China"]
+  },
+  {
+    "answer": "camel",
+    "hints": ["Lives in deserts", "Has humps", "Can go long without water"]
+  },
+  {
+    "answer": "crocodile",
+    "hints": ["Large reptile", "Lives near rivers", "Very strong bite"]
+  }
+]

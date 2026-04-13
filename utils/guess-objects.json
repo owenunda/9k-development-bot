@@ -1,0 +1,82 @@
+[
+  {
+    "answer": "keyboard",
+    "hints": ["Used with a computer", "Has many keys", "Used to type words"]
+  },
+  {
+    "answer": "umbrella",
+    "hints": ["Used in bad weather", "Opens and closes", "Protects you from rain"]
+  },
+  {
+    "answer": "backpack",
+    "hints": ["Worn on your back", "Used to carry items", "Common at school or travel"]
+  },
+  {
+    "answer": "headphones",
+    "hints": ["Used to listen privately", "Worn on or in ears", "Connected to phones or computers"]
+  },
+  {
+    "answer": "flashlight",
+    "hints": ["Portable light source", "Useful when power is out", "Usually battery powered"]
+  },
+  {
+    "answer": "bottle",
+    "hints": ["Container for liquids", "Often made of plastic or glass", "Has a cap"]
+  },
+  {
+    "answer": "notebook",
+    "hints": ["Used for writing", "Has many pages", "Common at school"]
+  },
+  {
+    "answer": "pencil",
+    "hints": ["Used to write", "Can be erased", "Needs sharpening"]
+  },
+  {
+    "answer": "phone",
+    "hints": ["Communication device", "Can make calls", "Used for apps and messages"]
+  },
+  {
+    "answer": "clock",
+    "hints": ["Shows time", "Has numbers", "Can be on a wall"]
+  },
+  {
+    "answer": "wallet",
+    "hints": ["Holds money", "Fits in pocket", "Stores cards"]
+  },
+  {
+    "answer": "camera",
+    "hints": ["Captures images", "Used for photos", "Has a lens"]
+  },
+  {
+    "answer": "monitor",
+    "hints": ["Output device", "Displays computer content", "Looks like a screen"]
+  },
+  {
+    "answer": "chair",
+    "hints": ["Furniture item", "Used for sitting", "Usually has legs"]
+  },
+  {
+    "answer": "table",
+    "hints": ["Furniture with flat top", "Used for eating or working", "Can have four legs"]
+  },
+  {
+    "answer": "mirror",
+    "hints": ["Reflective surface", "Shows your image", "Common in bathrooms"]
+  },
+  {
+    "answer": "scissors",
+    "hints": ["Cutting tool", "Has two blades", "Used for paper"]
+  },
+  {
+    "answer": "remote",
+    "hints": ["Controls devices", "Has many buttons", "Often used with TV"]
+  },
+  {
+    "answer": "speaker",
+    "hints": ["Outputs sound", "Used for music", "Can connect to phones"]
+  },
+  {
+    "answer": "charger",
+    "hints": ["Provides power", "Used for phones and laptops", "Connects to outlets"]
+  }
+]

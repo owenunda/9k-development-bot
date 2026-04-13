@@ -1,0 +1,82 @@
+[
+  {
+    "answer": "library",
+    "hints": ["Quiet public place", "You borrow things here", "Filled with books"]
+  },
+  {
+    "answer": "airport",
+    "hints": ["Travel hub", "Planes arrive and depart", "You pass security here"]
+  },
+  {
+    "answer": "museum",
+    "hints": ["You can learn history here", "Contains exhibitions", "Usually no touching displays"]
+  },
+  {
+    "answer": "beach",
+    "hints": ["Near the ocean", "Has sand", "Popular in summer"]
+  },
+  {
+    "answer": "hospital",
+    "hints": ["Open 24/7", "Doctors and nurses work here", "Used for medical emergencies"]
+  },
+  {
+    "answer": "school",
+    "hints": ["Students go here", "Has classrooms", "Teachers work here"]
+  },
+  {
+    "answer": "stadium",
+    "hints": ["Big sports venue", "Has many seats", "Crowds gather for events"]
+  },
+  {
+    "answer": "restaurant",
+    "hints": ["You can eat here", "Has a menu", "Food is prepared by chefs"]
+  },
+  {
+    "answer": "forest",
+    "hints": ["Natural area", "Many trees", "Home to wildlife"]
+  },
+  {
+    "answer": "desert",
+    "hints": ["Very dry place", "Little rain", "Often very hot during day"]
+  },
+  {
+    "answer": "mountain",
+    "hints": ["Very high landform", "Can be climbed", "Often colder at the top"]
+  },
+  {
+    "answer": "island",
+    "hints": ["Land surrounded by water", "Can be tropical", "Reached by boat or plane"]
+  },
+  {
+    "answer": "village",
+    "hints": ["Small community", "Smaller than a city", "Usually quieter"]
+  },
+  {
+    "answer": "city",
+    "hints": ["Large urban area", "Many buildings and roads", "High population"]
+  },
+  {
+    "answer": "park",
+    "hints": ["Public green area", "People relax here", "May have playgrounds"]
+  },
+  {
+    "answer": "zoo",
+    "hints": ["Animals are displayed here", "Families visit often", "Has many enclosures"]
+  },
+  {
+    "answer": "theater",
+    "hints": ["Place for performances", "Has a stage", "You buy tickets"]
+  },
+  {
+    "answer": "bridge",
+    "hints": ["Connects two sides", "Crosses water or roads", "Used by vehicles or pedestrians"]
+  },
+  {
+    "answer": "castle",
+    "hints": ["Historic fortified building", "Associated with kings and queens", "Has towers"]
+  },
+  {
+    "answer": "station",
+    "hints": ["Transport stop", "Trains or buses arrive here", "People wait for departures"]
+  }
+]
