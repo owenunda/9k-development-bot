@@ -5,6 +5,7 @@ import path from 'path';
 import config from './config.js';
 import logger from './utils/logger.js';
 import { GetUser, AddUser, SearchString, SaveBotUsers, ReturnDB, AlertCoolDown, SetCoolDown, CheckCoolDown, CheckMonthlyReset, GetActiveAntiSpam, ShouldShowAntiSpam, GetRandomQuestion, CreateEmbed, LoadRedeemCodes, CheckRestricted, IncrementSpamScore, ResetSpamScore, SetRestricted, ProcessSpamDecay } from './utils/functions.js';
+import { getUserTtsLanguage, isTtsTrack, queueTtsPlayback } from './utils/tts.js';
 import * as mysql2 from 'mysql2';
 import * as canvas from 'canvas';
 import * as ytSearch from 'yt-search';
@@ -91,6 +92,11 @@ Bot.Embed.Thumbnail = false;//Bot.ICON
 Bot.SongSys = {};
 Bot.SongSys.Servers = [];
 Bot.SongSys.AllowedServers = config.music.allowedServers;
+Bot.TTS = {
+        UserLanguage: new Map(),
+        AutoChannels: new Map(),
+        LastTrackTypeByGuild: new Map(),
+};
 
 const messageCashCooldowns = new Map();
 const userCommandHistory = new Map(); // Tracks last 3 commands per user: { userId: [cmd1, cmd2, cmd3] }
@@ -151,6 +157,13 @@ Bot.Client.riffy.on('trackStart', async (player, track) => {
         }
         lastTrackStartByGuild.set(player.guildId, { key: startKey, timestamp: now });
 
+        const currentTrackIsTts = isTtsTrack(track);
+        Bot.TTS.LastTrackTypeByGuild.set(player.guildId, currentTrackIsTts ? 'tts' : 'music');
+
+        if (currentTrackIsTts) {
+                return;
+        }
+
         const channel = Bot.Client.channels.cache.get(player.textChannel);
         if (channel) {
                 channel.send(`Now playing: **${track.info.title}** by **${track.info.author}**`);
@@ -161,6 +174,9 @@ Bot.Client.riffy.on('trackError', async (player, track, payload) => {
         const channel = Bot.Client.channels.cache.get(player.textChannel);
         const reason = payload?.exception?.message || payload?.exception?.cause || 'Unknown Lavalink error';
         logger.error(`[Riffy] Track error in guild ${player.guildId}: ${reason}`);
+        if (isTtsTrack(track)) {
+                return;
+        }
         if (channel) {
                 channel.send(`Error playing: **${track.info.title}**\nReason: ${reason}`);
         }
@@ -168,20 +184,22 @@ Bot.Client.riffy.on('trackError', async (player, track, payload) => {
 
 Bot.Client.riffy.on('queueEnd', async (player) => {
         lastTrackStartByGuild.delete(player.guildId);
+        const lastTrackType = Bot.TTS.LastTrackTypeByGuild.get(player.guildId) || 'music';
         const channel = Bot.Client.channels.cache.get(player.textChannel);
-        if (channel) {
+        if (channel && lastTrackType !== 'tts') {
                 channel.send('Queue has ended. Disconnecting in 5 minutes if no new songs are added...');
         }
         // Set 5-minute AFK timeout
         const timeout = setTimeout(() => {
                 const currentPlayer = Bot.Client.riffy.players.get(player.guildId);
                 if (currentPlayer && !currentPlayer.playing) {
-                        if (channel) {
+                        if (channel && lastTrackType !== 'tts') {
                                 channel.send('Disconnected due to inactivity.');
                         }
                         currentPlayer.destroy();
                 }
                 afkTimeouts.delete(player.guildId);
+                Bot.TTS.LastTrackTypeByGuild.delete(player.guildId);
         }, 5 * 60 * 1000); // 5 minutes
         afkTimeouts.set(player.guildId, timeout);
 });
@@ -270,6 +288,10 @@ Bot.Client.on('messageCreate', msg => {
         }
         User = GetUser(msg.author.id, Bot);
         //User.messages += 1;
+
+                handleAutoTtsMessage(msg, Bot).catch((error) => {
+                        logger.error({ message: 'Auto TTS handler error', stack: error.stack, label: 'AutoTTS' });
+                });
 
         const messageCashKey = `MsgCash-${msg.author.id}`;
         const now = Date.now();
@@ -377,6 +399,33 @@ Bot.Client.on('messageCreate', msg => {
         cmdrunning = false
 
 })
+
+async function handleAutoTtsMessage(msg, Bot) {
+        if (!msg.guild || !msg.content?.trim()) return;
+        if (!Bot.TTS?.AutoChannels) return;
+
+        const autoConfig = Bot.TTS.AutoChannels.get(msg.guild.id);
+        if (!autoConfig) return;
+
+        if (msg.channel.id !== autoConfig.textChannelId) return;
+
+        const member = await msg.guild.members.fetch(msg.author.id).catch(() => null);
+        if (!member?.voice?.channel) return;
+        if (member.voice.channel.id !== autoConfig.voiceChannelId) return;
+
+        const preferredLanguage = getUserTtsLanguage(Bot, msg.author.id, 'en');
+
+        await queueTtsPlayback({
+                Bot,
+                client: Bot.Client,
+                guild: msg.guild,
+                member,
+                textChannelId: msg.channel.id,
+                requester: msg.author,
+                rawText: msg.content.trim(),
+                targetLanguage: preferredLanguage,
+        });
+}
 
 // Handle slash command interactions and button interactions
 Bot.Client.on(Events.InteractionCreate, async interaction => {
