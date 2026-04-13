@@ -304,11 +304,6 @@ Bot.Client.on('messageCreate', msg => {
         // Message logging/counting disabled (handled by another bot)
 
         const mtext = msg.content;
-        const cooldownkey = `DefaultCmd-${msg.author.id}`;
-
-        if (CheckCoolDown(cooldownkey)) {
-                return AlertCoolDown(msg, cooldownkey, Bot)
-        }
 
         // Anti-Spam Check
         const activeAntiSpam = GetActiveAntiSpam();
@@ -326,77 +321,6 @@ Bot.Client.on('messageCreate', msg => {
                 }
         }
 
-        if (SearchString(mtext, Bot.Codes) && cmdrunning == false) {
-                Bot.Commands.get('redeem').execute(msg, User, Bot);
-                cmdrunning = true;
-        }
-
-        let bestMatch = null;
-        let bestMatchLength = 0;
-
-        Bot.Commands.forEach(cmd => {
-            if (cmd.aliases) {
-                cmd.aliases.forEach(alias => {
-                     // Check if message starts with alias (case insensitive)
-                     if (mtext.toLowerCase().startsWith(alias.toLowerCase())) {
-                         if (alias.length > bestMatchLength) {
-                             bestMatch = cmd;
-                             bestMatchLength = alias.length;
-                         }
-                     }
-                });
-            }
-        });
-
-        if (bestMatch && !cmdrunning) {
-             // Roll for anti-spam before executing
-             try {
-                 // Scoring Logic
-                 IncrementSpamScore(msg.author.id, 1, Bot);
-                 if (bestMatch.botPoints) IncrementSpamScore(msg.author.id, 1, Bot);
-
-                 // Repetition tracking
-                 let history = userCommandHistory.get(msg.author.id) || [];
-                 history.push(bestMatch.name);
-                 if (history.length > 3) history.shift();
-                 userCommandHistory.set(msg.author.id, history);
-
-                 if (history.length === 3 && history.every(v => v === bestMatch.name)) {
-                     IncrementSpamScore(msg.author.id, 5, Bot);
-                 }
-
-                 // Score-based Captcha Trigger
-                 if ((User.spam_score || 0) >= 100) {
-                     const challenge = GetRandomQuestion(Bot);
-                     activeAntiSpam.set(msg.author.id, challenge);
-                     
-                     // If they already hit 100 and typed something else, they fail
-                     // but here we just show it for the first time
-                     return msg.reply(challenge.text);
-                 }
-
-                 // Existing Probabilistic Captcha
-                 if (ShouldShowAntiSpam()) {
-                     const challenge = GetRandomQuestion(Bot);
-                     activeAntiSpam.set(msg.author.id, challenge);
-                     return msg.reply(challenge.text);
-                 }
-
-                 bestMatch.execute(msg, User, Bot);
-             } catch (error) {
-                 logger.error({ 
-                     message: `Error executing prefix command: ${bestMatch.name}`, 
-                     stack: error.stack, 
-                     label: 'PrefixCommandExecute' 
-                 });
-             }
-             cmdrunning = true;
-        }
-
-        if (cmdrunning == true) {
-                SetCoolDown(msg, `DefaultCmd-${msg.author.id}`, 1100)
-        }
-        cmdrunning = false
 
 })
 
@@ -695,6 +619,35 @@ Bot.Client.on('messageReactionRemove', async (reaction, user) => {
 
 // Log in to Discord with your client's token
 Bot.Client.login(Bot.Token);
+
+// Graceful Shutdown Logic
+async function gracefulShutdown(signal) {
+    logger.info(`[System] Signal ${signal} received. Initiating graceful shutdown...`);
+    
+    try {
+        // Save all users
+        SaveBotUsers(Bot);
+        logger.info('[System] User data saved successfully.');
+        
+        // Wait a brief moment for queries to complete
+        await new Promise(resolve => setTimeout(resolve, 2000));
+    } catch (err) {
+        logger.error(`[System] Error during save: ${err.message}`);
+    }
+
+    // Destroy client to close voice and gateway connections
+    if (Bot.Client) {
+        Bot.Client.destroy();
+        logger.info('[System] Discord client destroyed.');
+    }
+
+    logger.info(`[System] Shutdown completed (${signal}).`);
+    process.exit(0);
+}
+
+// Manejadores de señales del proceso
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 // Global Error Handlers
 process.on('unhandledRejection', error => {
