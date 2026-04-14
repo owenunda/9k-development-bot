@@ -16,6 +16,27 @@ export default {
         const isInteraction = msg.commandName !== undefined;
         let inviteLink = '';
 
+        const guild = isInteraction ? msg.guild : msg.guild;
+        const adminRole = guild?.roles?.cache?.find(role => role.name === '!9k-Admin');
+        let hasAdminRole = false;
+
+        if (adminRole && guild) {
+            if (isInteraction) {
+                const member = guild.members.cache.get(msg.user.id) || await guild.members.fetch(msg.user.id).catch(() => null);
+                hasAdminRole = member?.roles?.cache?.has(adminRole.id) || false;
+            } else {
+                hasAdminRole = msg.member?.roles?.cache?.has(adminRole.id) || false;
+            }
+        }
+
+        if (!hasAdminRole) {
+            const errorMsg = "You need the !9k-Admin role to use this command.";
+            if (isInteraction) {
+                return msg.reply({ content: errorMsg, ephemeral: true });
+            }
+            return msg.reply(errorMsg);
+        }
+
         if (isInteraction) {
             inviteLink = msg.options.getString('invite');
             await msg.deferReply();
