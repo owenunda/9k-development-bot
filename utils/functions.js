@@ -979,3 +979,141 @@ export async function ProcessSpamDecay(Bot) {
         }
     }
 }
+
+/* ============================================================
+   Rotcore Rumble — DB Functions
+   All use RotcoreRumbleUsers (User = Discord userid).
+   No changes to BotUsers.
+   ============================================================ */
+
+export function GetRumbleUser(userid, Bot) {
+    return new Promise((resolve) => {
+        const connection = ConnectDB(Bot);
+        connection.query(
+            'SELECT * FROM RotcoreRumbleUsers WHERE `User` = ? LIMIT 1',
+            [userid],
+            function (error, results) {
+                connection.end();
+                if (error) {
+                    logger.error({ message: 'GetRumbleUser Error', error, label: 'Rumble' });
+                    resolve(null);
+                } else {
+                    resolve(results.length > 0 ? results[0] : null);
+                }
+            }
+        );
+    });
+}
+
+export function AddRumbleUser(userid, Bot) {
+    return new Promise((resolve) => {
+        const connection = ConnectDB(Bot);
+        connection.connect();
+        connection.query(
+            "INSERT IGNORE INTO RotcoreRumbleUsers (`User`, `Players`, `Cards`, `Wins`, `Loss`) VALUES (?, NULL, NULL, 0, 0)",
+            [userid],
+            function (error, results) {
+                connection.end();
+                if (error) {
+                    logger.error({ message: 'AddRumbleUser Error', error, label: 'Rumble' });
+                    resolve(false);
+                } else {
+                    resolve(true);
+                }
+            }
+        );
+        connection.on('error', function (err) {
+            logger.error({ message: 'AddRumbleUser Connection Error', error: err, label: 'Rumble' });
+            resolve(false);
+        });
+    });
+}
+
+export function SaveRumbleUser(rumbleUser, Bot) {
+    if (!rumbleUser || !rumbleUser.User) {
+        logger.error({ message: 'SaveRumbleUser Error: Invalid rumble user object', label: 'Rumble' });
+        return Promise.resolve(false);
+    }
+    return new Promise((resolve) => {
+        const connection = ConnectDB(Bot);
+        connection.connect();
+        connection.query(
+            'UPDATE RotcoreRumbleUsers SET `Players` = ?, `Cards` = ?, `Wins` = ?, `Loss` = ? WHERE `User` = ?',
+            [
+                rumbleUser.Players ?? null,
+                rumbleUser.Cards ?? null,
+                rumbleUser.Wins ?? 0,
+                rumbleUser.Loss ?? 0,
+                rumbleUser.User
+            ],
+            function (error) {
+                connection.end();
+                if (error) {
+                    logger.error({ message: 'SaveRumbleUser Error', error, label: 'Rumble' });
+                    resolve(false);
+                } else {
+                    resolve(true);
+                }
+            }
+        );
+        connection.on('error', function (err) {
+            logger.error({ message: 'SaveRumbleUser Connection Error', error: err, label: 'Rumble' });
+            resolve(false);
+        });
+    });
+}
+
+export function GetRumbleLeaderboard(limit, Bot) {
+    return new Promise((resolve) => {
+        const connection = ConnectDB(Bot);
+        connection.query(
+            'SELECT * FROM RotcoreRumbleUsers ORDER BY `Wins` DESC, `Loss` ASC LIMIT ?',
+            [limit || 10],
+            function (error, results) {
+                connection.end();
+                if (error) {
+                    logger.error({ message: 'GetRumbleLeaderboard Error', error, label: 'Rumble' });
+                    resolve([]);
+                } else {
+                    resolve(results || []);
+                }
+            }
+        );
+    });
+}
+
+export function GetRumbleShopCards(Bot) {
+    return new Promise((resolve) => {
+        const connection = ConnectDB(Bot);
+        connection.query(
+            'SELECT * FROM RotcoreRumbleCards WHERE `Shop` = 1 ORDER BY `id` ASC',
+            function (error, results) {
+                connection.end();
+                if (error) {
+                    logger.error({ message: 'GetRumbleShopCards Error', error, label: 'Rumble' });
+                    resolve([]);
+                } else {
+                    resolve(results || []);
+                }
+            }
+        );
+    });
+}
+
+export function GetRumbleShopPlayers(Bot) {
+    return new Promise((resolve) => {
+        const connection = ConnectDB(Bot);
+        connection.query(
+            'SELECT * FROM RotcoreRumblePlayers WHERE `Shop` = 1 ORDER BY `id` ASC',
+            function (error, results) {
+                connection.end();
+                if (error) {
+                    logger.error({ message: 'GetRumbleShopPlayers Error', error, label: 'Rumble' });
+                    resolve([]);
+                } else {
+                    resolve(results || []);
+                }
+            }
+        );
+    });
+}
