@@ -8,6 +8,11 @@ import {
     GetRumbleShopCards,
     GetRumbleShopPlayers
 } from '../../utils/functions.js';
+import {
+    EnsurePlayer,
+    InitializeBattle,
+    ResolveBattleLoadout
+} from '../../utils/battle-logic.js';
 
 // Helper: get or auto-create a RumbleUser row
 async function ensureRumbleUser(userid, Bot) {
@@ -67,17 +72,38 @@ export default {
                     return msg.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
                 }
 
-                // Ensure both users exist in RotcoreRumbleUsers
+                // Ensure both users exist in RotcoreRumbleUsers and give them a base setup
                 const [rumbleUser, opponentRumble] = await Promise.all([
-                    ensureRumbleUser(userId, Bot),
-                    ensureRumbleUser(opponent.id, Bot)
+                    EnsurePlayer(userId, Bot),
+                    EnsurePlayer(opponent.id, Bot)
                 ]);
+
+                if (!rumbleUser || !opponentRumble) {
+                    Embed.Title = 'Rotcore Rumble';
+                    Embed.Description = '> Could not prepare the battle setup. Please try again.';
+                    Embed.Color = 15548997;
+                    return msg.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
+                }
+
+                const battleState = InitializeBattle(rumbleUser, opponentRumble, opponent.username);
+
+                if (!battleState) {
+                    Embed.Title = 'Rotcore Rumble';
+                    Embed.Description = '> Battle setup failed. Please try again.';
+                    Embed.Color = 15548997;
+                    return msg.reply({ embeds: [CreateEmbed(Embed)], ephemeral: true });
+                }
+
+                const player1Loadout = ResolveBattleLoadout(rumbleUser);
+                const player2Loadout = ResolveBattleLoadout(opponentRumble);
 
                 Embed.Title = 'Rotcore Rumble — Battle';
                 Embed.Description = [
                     `**${msg.user.username}** has challenged **${opponent.username}** to a battle!`,
                     '',
-                    '> **Battle system coming soon!**',
+                    '> **Battle base ready.**',
+                    `> You are using **${player1Loadout.selectedPlayer?.name || 'Unknown'}** with **${player1Loadout.selectedDeckName}**.`,
+                    `> Opponent is using **${player2Loadout.selectedPlayer?.name || 'Unknown'}** with **${player2Loadout.selectedDeckName}**.`,
                     `> Your record: **${rumbleUser.Wins}W / ${rumbleUser.Loss}L**`
                 ].join('\n');
                 Embed.Color = 15105570; // Orange
