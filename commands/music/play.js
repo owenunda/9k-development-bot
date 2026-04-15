@@ -21,6 +21,11 @@ export default {
             return interaction.reply({ content: 'Music system is not ready yet. Please try again in a moment.', flags: 64 });
         }
 
+        // Block music if TTS is active
+        if (Bot?.TTS?.DirectSessions?.has(guild.id) || Bot?.TTS?._ttsGuilds?.has(guild.id)) {
+            return interaction.reply({ content: '🔊 TTS is currently active in this server. Use `/ttsstop` to stop TTS before playing music.', flags: 64 });
+        }
+
         if (!member.voice.channel) {
             return interaction.reply({ content: 'You must be in a voice channel to use this command.', flags: 64 });
         }

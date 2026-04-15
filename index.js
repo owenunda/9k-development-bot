@@ -336,6 +336,10 @@ async function handleAutoTtsMessage(msg, Bot) {
 
         if (msg.channel.id !== autoConfig.textChannelId) return;
 
+        // Skip auto-TTS if music is playing
+        const riffyPlayer = Bot.Client?.riffy?.players?.get(msg.guild.id);
+        if (riffyPlayer && (riffyPlayer.playing || riffyPlayer.paused)) return;
+
         const member = await msg.guild.members.fetch(msg.author.id).catch(() => null);
         if (!member?.voice?.channel) return;
         if (member.voice.channel.id !== autoConfig.voiceChannelId) return;

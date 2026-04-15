@@ -36,6 +36,12 @@ export default {
             return interaction.reply({ content: 'TTS system is not ready yet. Please try again in a moment.', flags: 64 });
         }
 
+        // Block TTS if music is playing
+        const riffyPlayer = client.riffy?.players?.get(guild.id);
+        if (riffyPlayer && (riffyPlayer.playing || riffyPlayer.paused)) {
+            return interaction.reply({ content: '🎵 Music is currently playing in this server. Use `/stop` to stop music before using TTS.', flags: 64 });
+        }
+
         if (!member.voice.channel) {
             return interaction.reply({ content: 'You must be in a voice channel to use this command.', flags: 64 });
         }
