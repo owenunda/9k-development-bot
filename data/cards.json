@@ -1,0 +1,54 @@
+[
+    {
+        "id": 1,
+        "name": "Minecraft Steve",
+        "combos": [2],
+        "attack": 5,
+        "defense": 15,
+        "health": 30,
+        "crafting": [],
+        "rarity": "common"
+    },
+    {
+        "id": 2,
+        "name": "Hank Hill",
+        "combos": [1],
+        "attack": 10,
+        "defense": 5,
+        "health": 30,
+        "crafting": [],
+        "rarity": "common"
+    },
+    {
+        "id": 3,
+        "name": "Mowed Lawn",
+        "combos": [],
+        "attack": 10,
+        "defense": 19,
+        "health": 45,
+        "crafting": [[1, 2]],
+        "rarity": "rare"
+    },
+    {
+        "id": 4,
+        "name": "Health Potion",
+        "combos": [],
+        "attack": 0,
+        "defense": 0,
+        "health": 20,
+        "crafting": [],
+        "type": "item",
+        "rarity": "common"
+    },
+    {
+        "id": 5,
+        "name": "Attack Boost Potion",
+        "combos": [],
+        "attack": 5,
+        "defense": 0,
+        "health": 0,
+        "crafting": [],
+        "type": "item",
+        "rarity": "uncommon"
+    }
+]

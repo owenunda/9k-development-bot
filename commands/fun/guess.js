@@ -33,9 +33,9 @@ function disableRow(row) {
 }
 
 function loadGuessWords() {
-    const animalsPath = path.resolve('utils/guess-animals.json');
-    const placesPath = path.resolve('utils/guess-places.json');
-    const objectsPath = path.resolve('utils/guess-objects.json');
+    const animalsPath = path.resolve('data/guess-animals.json');
+    const placesPath = path.resolve('data/guess-places.json');
+    const objectsPath = path.resolve('data/guess-objects.json');
 
     const animals = JSON.parse(fs.readFileSync(animalsPath, 'utf8'));
     const places = JSON.parse(fs.readFileSync(placesPath, 'utf8'));

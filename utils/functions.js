@@ -864,7 +864,7 @@ export function ShouldShowAntiSpam() {
 
 export function GetRandomQuestion(Bot) {
     try {
-        const worksPath = path.resolve('utils/works.json');
+        const worksPath = path.resolve('data/works.json');
         const content = fs.readFileSync(worksPath, 'utf8');
         const words = JSON.parse(content);
         

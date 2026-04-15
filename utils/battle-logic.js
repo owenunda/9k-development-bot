@@ -3,86 +3,17 @@
  * Handles game setup, battle mechanics, and data management
  */
 
+import { createRequire } from 'module';
 import logger from './logger.js';
 import { GetRumbleUser, AddRumbleUser, SaveRumbleUser } from './functions.js';
 
 /* ============================================================
-   CARD DEFINITIONS (Hardcoded Game Data)
+   CARD & PLAYER DATA (Loaded from JSON)
    ============================================================ */
 
-// Card database with all available cards
-export const CARDS_DB = [
-    {
-        id: 1,
-        name: 'Minecraft Steve',
-        combos: [2], // Can combine with 'Hank Hill' (id: 2)
-        attack: 5,
-        defense: 15,
-        health: 30,
-        crafting: [], // Empty - can be crafted into other cards
-        rarity: 'common'
-    },
-    {
-        id: 2,
-        name: 'Hank Hill',
-        combos: [1], // Can combine with 'Minecraft Steve'
-        attack: 10,
-        defense: 5,
-        health: 30,
-        crafting: [],
-        rarity: 'common'
-    },
-    {
-        id: 3,
-        name: 'Mowed Lawn',
-        combos: [],
-        attack: 10,
-        defense: 19,
-        health: 45,
-        crafting: [[1, 2]], // Result of combining Minecraft Steve + Hank Hill
-        rarity: 'rare'
-    },
-    {
-        id: 4,
-        name: 'Health Potion',
-        combos: [],
-        attack: 0,
-        defense: 0,
-        health: 20,
-        crafting: [],
-        type: 'item',
-        rarity: 'common'
-    },
-    {
-        id: 5,
-        name: 'Attack Boost Potion',
-        combos: [],
-        attack: 5,
-        defense: 0,
-        health: 0,
-        crafting: [],
-        type: 'item',
-        rarity: 'uncommon'
-    }
-];
-
-// Player/Character database
-export const PLAYERS_DB = [
-    {
-        id: 1,
-        name: 'Hank Hill',
-        health: 100,
-        pvp: true,
-        rarity: 'common'
-    },
-    {
-        id: 2,
-        name: 'Eric Cartman',
-        health: 80,
-        pvp: true,
-        rarity: 'uncommon'
-    }
-];
+const require = createRequire(import.meta.url);
+export const CARDS_DB = require('../data/cards.json');
+export const PLAYERS_DB = require('../data/players.json');
 
 /* ============================================================
    STARTER SETUP - For New Players

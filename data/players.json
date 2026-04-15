@@ -1,0 +1,16 @@
+[
+    {
+        "id": 1,
+        "name": "Hank Hill",
+        "health": 100,
+        "pvp": true,
+        "rarity": "common"
+    },
+    {
+        "id": 2,
+        "name": "Eric Cartman",
+        "health": 80,
+        "pvp": true,
+        "rarity": "uncommon"
+    }
+]
