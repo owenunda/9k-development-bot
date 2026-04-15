@@ -31,7 +31,12 @@ export default {
                         .addChoices(
                             { name: 'on', value: 'on' },
                             { name: 'off', value: 'off' },
-                        ))),
+                        ))
+                .addBooleanOption(option =>
+                    option
+                        .setName('translate')
+                        .setDescription('Auto-translate messages (English↔Spanish) before speaking')
+                        .setRequired(false))),
     aliases: [],
     async execute(interaction, User, Bot) {
         if (!interaction.isChatInputCommand()) return;
@@ -68,12 +73,19 @@ export default {
                 return interaction.reply({ content: 'Auto TTS disabled for this server.', flags: 64 });
             }
 
+            const autoTranslate = interaction.options.getBoolean('translate') ?? false;
+
             Bot.TTS.AutoChannels.set(interaction.guild.id, {
                 textChannelId: interaction.channel.id,
                 voiceChannelId: member.voice.channel.id,
+                translate: autoTranslate,
             });
 
-            return interaction.reply({ content: 'Auto TTS enabled in this channel for your current voice channel.', flags: 64 });
+            const translateMsg = autoTranslate
+                ? '\n🌐 Auto-translate enabled (English↔Spanish)'
+                : '';
+
+            return interaction.reply({ content: `Auto TTS enabled in this channel for your current voice channel.${translateMsg}`, flags: 64 });
         }
     }
 };

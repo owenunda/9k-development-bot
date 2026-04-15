@@ -20,7 +20,12 @@ export default {
                 .addChoices(
                     { name: 'Spanish', value: 'es' },
                     { name: 'English', value: 'en' },
-                )),
+                ))
+        .addBooleanOption(option =>
+            option
+                .setName('translate')
+                .setDescription('Translate the text to the selected language before speaking')
+                .setRequired(false)),
     aliases: [],
     async execute(interaction, User, Bot) {
         if (!interaction.isChatInputCommand()) return;
@@ -61,6 +66,8 @@ export default {
 
         await interaction.deferReply().catch(() => {});
 
+        const shouldTranslate = interaction.options.getBoolean('translate') ?? false;
+
         try {
             const playback = await queueTtsPlayback({
                 Bot,
@@ -71,11 +78,15 @@ export default {
                 requester: interaction.user,
                 rawText: text,
                 targetLanguage: language,
+                translate: shouldTranslate,
             });
 
             const position = playback.isNowPlaying ? 'Playing now' : `Queued at position ${playback.queuePosition}`;
+            const translationNote = shouldTranslate && playback.translatedText !== text
+                ? `\n📝 Translated: *"${playback.translatedText}"*`
+                : '';
 
-            return interaction.editReply(`TTS queued in ${playback.languageName}. ${position}.`);
+            return interaction.editReply(`TTS queued in ${playback.languageName}. ${position}.${translationNote}`);
         } catch (error) {
             return interaction.editReply(`An error occurred while generating TTS: ${error.message}`);
         }

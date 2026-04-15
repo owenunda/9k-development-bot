@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@discordjs/voice": "^0.19.0",
+    "@snazzah/davey": "^0.1.11",
     "@vitalets/google-translate-api": "^9.2.1",
     "axios": "^1.6.0",
     "canvas": "^3.2.0",
@@ -9,10 +10,13 @@
     "date-fns": "^4.1.0",
     "discord-ytdl-core": "^5.0.4",
     "discord.js": "^14.25.1",
+    "google-translate-api-x": "^10.7.2",
     "kazagumo": "^3.4.3",
     "mysql2": "^3.15.3",
+    "opusscript": "^0.0.8",
     "riffy": "^1.0.12",
     "shoukaku": "^4.3.0",
+    "tweetnacl": "^1.0.3",
     "winston": "^3.19.0",
     "yt-search": "^2.13.1",
     "ytdl-core": "^4.11.5"

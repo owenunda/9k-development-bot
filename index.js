@@ -210,6 +210,9 @@ const forwardVoicePacketToRiffy = (packet, source) => {
         if (!packet?.t || !packet?.d?.guild_id) return;
         if (![GatewayDispatchEvents.VoiceStateUpdate, GatewayDispatchEvents.VoiceServerUpdate].includes(packet.t)) return;
 
+        // Skip forwarding when TTS is using @discordjs/voice for this guild
+        if (Bot.TTS?._ttsGuilds?.has(packet.d.guild_id)) return;
+
         Bot.Client.riffy.updateVoiceState(packet).catch((error) => {
                 logger.error(`[Riffy] Failed forwarding ${packet.t} from ${source}: ${error.message}`);
         });
@@ -348,6 +351,7 @@ async function handleAutoTtsMessage(msg, Bot) {
                 requester: msg.author,
                 rawText: msg.content.trim(),
                 targetLanguage: preferredLanguage,
+                translate: autoConfig.translate || false,
         });
 }
 
