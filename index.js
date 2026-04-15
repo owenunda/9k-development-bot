@@ -1,8 +1,9 @@
 /* Discord Requires */
+import 'dotenv/config';
 import { Client, Events, GatewayIntentBits, EmbedBuilder, WebhookClient, Collection, GatewayDispatchEvents } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
-import config from './config.js';
+import config from './configLoader.js';
 import logger from './utils/logger.js';
 import { GetUser, AddUser, SearchString, SaveBotUsers, ReturnDB, AlertCoolDown, SetCoolDown, CheckCoolDown, CheckMonthlyReset, GetActiveAntiSpam, ShouldShowAntiSpam, GetRandomQuestion, CreateEmbed, LoadRedeemCodes, CheckRestricted, IncrementSpamScore, ResetSpamScore, SetRestricted, ProcessSpamDecay } from './utils/functions.js';
 import { getUserTtsLanguage, isTtsTrack, queueTtsPlayback } from './utils/tts.js';

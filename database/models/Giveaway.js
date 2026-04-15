@@ -1,4 +1,4 @@
-import config from '../../config.js';
+import config from '../../configLoader.js';
 import mysql2 from 'mysql2/promise';
 
 // Create connection pool

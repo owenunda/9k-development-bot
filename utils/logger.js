@@ -1,6 +1,7 @@
 import winston from 'winston';
 import { EmbedBuilder, WebhookClient } from 'discord.js';
-import config from '../config.js';
+import config from '../configLoader.js';
+import axios from 'axios';
 
 const { combine, timestamp, printf, colorize, errors, json } = winston.format;
 
