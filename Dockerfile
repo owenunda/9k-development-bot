@@ -29,5 +29,5 @@ COPY . .
 # Establecer la variable de entorno a producción
 ENV NODE_ENV=production
 
-# Comando para iniciar el bot
-CMD ["npm", "start"]
+# Comando para iniciar el bot y luego registrar los comandos en segundo plano
+CMD ["sh", "-c", "(sleep 5 && npm run deployC) & npm run start"]
