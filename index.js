@@ -433,6 +433,15 @@ Bot.Client.on(Events.InteractionCreate, async interaction => {
                                         logger.error({ message: 'Button interaction error', stack: error.stack, label: 'ButtonInteraction' });
                                 }
                         }
+                } else if (customId.startsWith('rumble_buy_p_') || customId.startsWith('rumble_buy_c_')) {
+                        const command = Bot.Commands.get('rotcorerumble');
+                        if (command) {
+                                try {
+                                        await command.execute(interaction, User, Bot);
+                                } catch (error) {
+                                        logger.error({ message: 'Button interaction error', stack: error.stack, label: 'ButtonInteraction' });
+                                }
+                        }
                 }
                 return;
         }
@@ -653,7 +662,7 @@ async function gracefulShutdown(signal) {
     process.exit(0);
 }
 
-// Manejadores de señales del proceso
+// Process signal handlers
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
